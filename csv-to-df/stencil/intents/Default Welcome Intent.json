@@ -1,0 +1,39 @@
+{
+  "id": "88716aa4-a201-4221-8723-e957a068ad31",
+  "name": "Default Welcome Intent",
+  "auto": true,
+  "contexts": [],
+  "responses": [
+    {
+      "resetContexts": false,
+      "action": "input.welcome",
+      "affectedContexts": [
+        {
+          "name": "init",
+          "parameters": {},
+          "lifespan": 3
+        }
+      ],
+      "parameters": [],
+      "messages": [
+        {
+          "type": 0,
+          "lang": "en",
+          "speech": "Welcome to ABC law partners. \nWe can help explore whether you have a legal case against someone who has broken an agreement. \nI am not a lawyer, but I provide preliminary analysis based on the facts of your case. This service is free.\nCan you briefly explain your issue? (e.g. my customer did not pay me, the goods was defective)"
+        }
+      ],
+      "defaultResponsePlatforms": {},
+      "speech": []
+    }
+  ],
+  "priority": 500000,
+  "webhookUsed": false,
+  "webhookForSlotFilling": false,
+  "lastUpdate": 1549099427,
+  "fallbackIntent": false,
+  "events": [
+    {
+      "name": "WELCOME"
+    }
+  ]
+}
