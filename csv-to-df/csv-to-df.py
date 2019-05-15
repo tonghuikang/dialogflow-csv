@@ -8,6 +8,7 @@ import pandas as pd
 import json
 import time
 import os
+import re
 
 
 # In[2]:
@@ -267,7 +268,7 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
     # ]
 
     # In[34]:
-
+    intent_name = re.sub(r"[^a-zA-Z0-9- ]", '_', intent_name)
 
     with open('template/intents/{}.json'.format(intent_name), 'w') as outfile:
         json.dump(intent_jsonfile, outfile)
@@ -326,7 +327,7 @@ agent_json = '''{
 
 
 os.system("rm template.zip")
-os.system("zip -r template.zip template -x *.DS_Store")
+os.system("cd template/ && zip -r ../template.zip * -x *.DS_Store")
 
 
 # In[37]:
