@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[3]:
+# In[2]:
 
 
 import glob
@@ -135,16 +135,5 @@ df
 df.to_csv("template.csv")
 
 
-# In[4]:
-
-
-# convert this notebook into a python script
-# and then remove the last few lines
-get_ipython().system('jupyter nbconvert --to script df-to-csv.ipynb')
-os.system("for i in {1..10}; do sed -i '' -e '$ d' df-to-csv.py; done")
-
-
-# In[ ]:
-
-
+# In[31]:
 
