@@ -14,16 +14,26 @@ from pprint import pprint as pp
 
 # In[ ]:
 
+import sys
+myargs = sys.argv
+if '-f' in myargs:
+    try: FILE_NAME = myargs[2]
+    except Exception as e:
+        print(e)
+        FILE_NAME = 'template'
+else:
+    FILE_NAME = 'template'
+
 
 os.system("rm -rf ./template")
-os.system("unzip template.zip -d template")
+os.system("unzip {}.zip -d {}".format(FILE_NAME, FILE_NAME))
 os.system("tree")
 
 
 # In[ ]:
 
 
-files = sorted([intent for intent in glob.glob('template/intents/*.json')])
+files = sorted([intent for intent in glob.glob('{}/intents/*.json'.format(FILE_NAME, FILE_NAME))])
 # files.remove('template/intents/Default Fallback Intent.json')
 # files.remove('template/intents/consideration-no_usersays_en.json')
 
@@ -132,7 +142,7 @@ df
 # In[ ]:
 
 
-df.to_csv("template.csv")
+df.to_csv("{}.csv".format(FILE_NAME))
 
 
 # In[31]:

@@ -13,6 +13,16 @@ import re
 
 # In[2]:
 
+import sys
+myargs = sys.argv
+if '-f' in myargs:
+    try: FILE_NAME = myargs[2]
+    except Exception as e:
+        print(e)
+        FILE_NAME = 'template'
+else:
+    FILE_NAME = 'template'
+
 
 # generate ID
 import random
@@ -29,14 +39,14 @@ generate_ID()
 
 
 # copy template
-os.system("rm -r template")
-os.system("cp -r stencil template")
+# os.system("rm -r template")
+os.system("cp -r stencil {}".format(FILE_NAME))
 
 
 # In[3]:
 
 
-df = pd.read_csv('template.csv', header=0)
+df = pd.read_csv('{}.csv'.format(FILE_NAME), header=0)
 df
 
 
@@ -270,10 +280,10 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
     # In[34]:
     intent_name = re.sub(r"[^a-zA-Z0-9- ]", '_', intent_name)
 
-    with open('template/intents/{}.json'.format(intent_name), 'w') as outfile:
+    with open('{}/intents/{}.json'.format(FILE_NAME, intent_name), 'w') as outfile:
         json.dump(intent_jsonfile, outfile)
 
-    with open('template/intents/{}_usersays_en.json'.format(intent_name), 'w') as outfile:
+    with open('{}/intents/{}_usersays_en.json'.format(FILE_NAME, intent_name), 'w') as outfile:
         json.dump(intent_usersays_jsonfile, outfile)
 
     # then process the next intent
@@ -326,8 +336,9 @@ agent_json = '''{
 # In[36]:
 
 
-os.system("rm template.zip")
-os.system("cd template/ && zip -r ../template.zip * -x *.DS_Store")
+# os.system("rm template.zip")
+os.system("cd {}/ && zip -r ../{}.zip * -x *.DS_Store".format(FILE_NAME, FILE_NAME))
+os.system("rm -rf {}".format(FILE_NAME))
 
 
 # In[37]:
