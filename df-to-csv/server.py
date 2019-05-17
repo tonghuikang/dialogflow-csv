@@ -56,7 +56,8 @@ class IngestHandler(BaseHTTPRequestHandler):
         {"My Little Pony" : "Friendship is Magic"}
         same if you use GET function in Postman
         '''
-        
+        # save a copy in our storage
+        os.system("gsutil cp template.zip gs://dialogflow-csv-stash")
         os.system("python3 df-to-csv.py")
         
         self.send_response(200)
