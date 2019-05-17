@@ -1,0 +1,12 @@
+,INTENT_NAME,INPUT_CONTEXT,OUTPUT_CONTEXT,USER_SAYS,,,,,,,,,,,,,,,,RESPONSES,,,,,,,,,,,
+0,Default Fallback Intent,,,,,,,,,,,,,,,,,,,I didn't get that. Can you say it again?,I missed what you said. What was that?,"Sorry, could you say that again?","Sorry, can you say that again?",Can you say that again?,"Sorry, I didn't get that. Can you rephrase?","Sorry, what was that?",One more time?,What was that?,Say that one more time?,I didn't get that. Can you repeat?,"I missed that, say that again?"
+1,Default Welcome Intent,,"3, init",just going to say hi,heya,hello hi,howdy,hey there,hi there,greetings,hey,long time no see,hello,lovely day isn't it,I greet you,hello again,hi,hello there,a good day,"Welcome to ABC law partners. 
+We can help explore whether you have a legal case against someone who has broken an agreement. 
+I am not a lawyer, but I provide preliminary analysis based on the facts of your case. This service is free.
+Can you briefly explain your issue? (e.g. my customer did not pay me, the goods was defective)",,,,,,,,,,,
+2,make chatbot,,,i want chatbot,,,,,,,,,,,,,,,,dashboard.botbot.ai,console.botbot.ai,,,,,,,,,,
+3,make coffee,thirsty,"0, thirsty",i want coffee,lim kopi ai mai,kopi siu dai gam xia,,,,,,,,,,,,,,half full drink up!,bo ta bo lam pah,bottoms up!,drink till you drop,now converting coffee into code,,,,,,,
+4,make love,rich,,i want love,,,,,,,,,,,,,,,,<3,,,,,,,,,,,
+5,make money,,"2, thirsty",i want money,bo lui ah,,,,,,,,,,,,,,,huat ah,,,,,,,,,,,
+6,make tea,thirsty,"10, woke",i want tea,lim tehsi,,,,,,,,,,,,,,,slowly drink,take your time,,,,,,,,,,
+7,make trouble,,,kua simi kua,le kua si mi,,,,,,,,,,,,,,,come fight la,,,,,,,,,,,
