@@ -79,7 +79,7 @@ for intent_json in intent_jsons:
 
         intent["USER_SAYS"] = []
         for usersays_json in usersays_jsons: # should be one or none
-            with open(usersays_json) as f:
+            with open(usersays_json, encoding="utf-8") as f:
                 usersays_info = json.load(f)
             for usersay in usersays_info:
                 intent["USER_SAYS"].append(usersay["data"][0]["text"])
