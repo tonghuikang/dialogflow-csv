@@ -58,7 +58,7 @@ class IngestHandler(BaseHTTPRequestHandler):
         print(FILE_NAME)
         
         print(postvars)
-        with open('{}.csv'.format(FILE_NAME), 'wb') as f:
+        with open('temp/{}.csv'.format(FILE_NAME), 'wb') as f:
             f.write(postvars['file-to-convert'][0])
 
         '''
@@ -67,14 +67,14 @@ class IngestHandler(BaseHTTPRequestHandler):
         same if you use GET function in Postman
         '''
         # save a copy in our storage
-        os.system("gsutil cp {}.csv gs://dialogflow-csv-stash".format(FILE_NAME))
+        os.system("gsutil cp temp/{}.csv gs://dialogflow-csv-stash".format(FILE_NAME))
         os.system("python3 csv-to-df.py -f {}".format(FILE_NAME))
         
         self.send_response(200)
         self.send_header('Content-type',  'binary')
         self.send_header('Content-Disposition', 'attachment; filename="output.zip"')
         self.end_headers()
-        with open('{}.zip'.format(FILE_NAME), 'rb') as file: 
+        with open('temp/{}.zip'.format(FILE_NAME), 'rb') as file: 
             self.wfile.write(file.read()) # Read the file and send the contents
         
 #         json_output = json.dumps({"My Little Pony" : "Friendship is Magic"}) 
@@ -88,8 +88,9 @@ class IngestHandler(BaseHTTPRequestHandler):
         
 #         self.wfile.write(json_output.encode())
         
-        os.system("rm {}.csv".format(FILE_NAME))
-        os.system("rm {}.zip".format(FILE_NAME))
+        os.system("rm temp/{}.csv".format(FILE_NAME))
+        os.system("rm temp/{}.zip".format(FILE_NAME))
+        os.system("rm -rf temp/{}".format(FILE_NAME))
         return True
 
     def do_GET(self):

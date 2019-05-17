@@ -40,13 +40,13 @@ generate_ID()
 
 # copy template
 # os.system("rm -r template")
-os.system("cp -r stencil {}".format(FILE_NAME))
+os.system("cp -r stencil temp/{}".format(FILE_NAME))
 
 
 # In[3]:
 
 
-df = pd.read_csv('{}.csv'.format(FILE_NAME), header=0)
+df = pd.read_csv('temp/{}.csv'.format(FILE_NAME), header=0)
 df
 
 
@@ -280,10 +280,10 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
     # In[34]:
     intent_name = re.sub(r"[^a-zA-Z0-9- ]", '_', intent_name)
 
-    with open('{}/intents/{}.json'.format(FILE_NAME, intent_name), 'w') as outfile:
+    with open('temp/{}/intents/{}.json'.format(FILE_NAME, intent_name), 'w') as outfile:
         json.dump(intent_jsonfile, outfile)
 
-    with open('{}/intents/{}_usersays_en.json'.format(FILE_NAME, intent_name), 'w') as outfile:
+    with open('temp/{}/intents/{}_usersays_en.json'.format(FILE_NAME, intent_name), 'w') as outfile:
         json.dump(intent_usersays_jsonfile, outfile)
 
     # then process the next intent
@@ -337,8 +337,7 @@ agent_json = '''{
 
 
 # os.system("rm template.zip")
-os.system("cd {}/ && zip -r ../{}.zip * -x *.DS_Store".format(FILE_NAME, FILE_NAME))
-os.system("rm -rf {}".format(FILE_NAME))
+os.system("cd temp/{}/ && zip -r ../{}.zip * -x *.DS_Store".format(FILE_NAME, FILE_NAME))
 
 
 # In[37]:

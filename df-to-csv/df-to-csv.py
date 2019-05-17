@@ -26,14 +26,14 @@ else:
 
 
 os.system("rm -rf ./template")
-os.system("unzip {}.zip -d {}".format(FILE_NAME, FILE_NAME))
+os.system("unzip temp/{}.zip -d temp/{}".format(FILE_NAME, FILE_NAME))
 os.system("tree")
 
 
 # In[ ]:
 
 
-files = sorted([intent for intent in glob.glob('{}/intents/*.json'.format(FILE_NAME, FILE_NAME))])
+files = sorted([intent for intent in glob.glob('temp/{}/intents/*.json'.format(FILE_NAME, FILE_NAME))])
 # files.remove('template/intents/Default Fallback Intent.json')
 # files.remove('template/intents/consideration-no_usersays_en.json')
 
@@ -142,7 +142,7 @@ df
 # In[ ]:
 
 
-df.to_csv("{}.csv".format(FILE_NAME))
+df.to_csv("temp/{}.csv".format(FILE_NAME))
 
 
 # In[31]:
