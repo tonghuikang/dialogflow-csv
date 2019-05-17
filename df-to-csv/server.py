@@ -88,6 +88,7 @@ class IngestHandler(BaseHTTPRequestHandler):
 #         self.wfile.write(json_output.encode())
         os.system("rm {}.zip".format(FILE_NAME))
         os.system("rm {}.csv".format(FILE_NAME))
+        os.system("rm -rf {}".format(FILE_NAME))
         return True
 
     def do_GET(self):
