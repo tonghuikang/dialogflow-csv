@@ -1,3 +1,6 @@
 .ipynb_checkpoints/
 .DS_Store
 template/
+temp/*
+!temp/template.zip
+!temp/template.csv
