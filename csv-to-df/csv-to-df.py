@@ -9,6 +9,7 @@ import json
 import time
 import os
 import re
+import json
 
 
 # In[2]:
@@ -149,7 +150,22 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
     intent_jsonfile_responses["parameters"] = []
     intent_jsonfile_responses["messages"] = []  # probably allow for list of messages? yes
 
+
+
     for response_bubble in responses:
+        try:
+            json_object = json.loads(response_bubble[0])
+            if type(json_object) == dict:
+                message = {}
+                message["type"] = 4
+                message["lang"] = "en"
+                message["payload"] = json_object
+                intent_jsonfile_responses["messages"].append(message)
+                continue
+
+        except:
+            pass
+
         message = {}
         message["type"] = 0
         message["lang"] = "en"
@@ -330,5 +346,5 @@ os.system("rm template.zip")
 os.system("cd temp/{}/ && zip -r ../{}.zip * -x *.DS_Store".format(FILE_NAME, FILE_NAME))
 
 
-# In[18]:
+# In[36]:
 
