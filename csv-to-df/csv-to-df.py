@@ -13,6 +13,7 @@ import re
 
 # In[2]:
 
+
 import sys
 myargs = sys.argv
 if '-f' in myargs:
@@ -22,11 +23,14 @@ if '-f' in myargs:
         FILE_NAME = 'template'
 else:
     FILE_NAME = 'template'
-
+    os.system("cp ./template.csv ./temp/")
+# if testing on jupyter notebook
+if FILE_NAME[0] == "/":
+    FILE_NAME = 'template'
+    os.system("cp ./template.csv ./temp/")
 
 # generate ID
 import random
-
 def generate_ID():
     c = ["".join([random.choice('01234567890abcdef') for _ in range(4)]) 
          for _ in range(8)]
@@ -35,22 +39,22 @@ def generate_ID():
 generate_ID()
 
 
-# In[ ]:
+# In[3]:
 
 
 # copy template
-# os.system("rm -r template")
+os.system("rm -r template")
 os.system("cp -r stencil temp/{}".format(FILE_NAME))
 
 
-# In[3]:
+# In[4]:
 
 
 df = pd.read_csv('temp/{}.csv'.format(FILE_NAME), header=0)
 df
 
 
-# In[4]:
+# In[5]:
 
 
 # get column number for manipulation next
@@ -58,29 +62,15 @@ col_num_INTENT_NAME = df.columns.get_loc("INTENT_NAME")
 col_num_IN = df.columns.get_loc("INPUT_CONTEXT")
 col_num_OUT = df.columns.get_loc("OUTPUT_CONTEXT")
 col_num_USER = df.columns.get_loc("USER_SAYS")
-col_num_RESP = df.columns.get_loc("RESPONSES")
+cols_name_RESP = [col for col in df if col.startswith('RESPONSES')]
+cols_num_RESP = []
+for col_name_RESP in cols_name_RESP:
+    cols_num_RESP.append(df.columns.get_loc(col_name_RESP))
+cols_num_RESP.append(len(df.columns))
 col_num_total = len(df.columns)
 
 
-# In[ ]:
-
-
-print(col_num_INTENT_NAME,col_num_IN,col_num_OUT,col_num_USER,col_num_RESP,col_num_total)
-
-
-# In[ ]:
-
-
-df.iloc[:,col_num_USER:col_num_RESP].values.tolist()
-
-
-# In[15]:
-
-
-df.iloc[:,col_num_IN:col_num_OUT].values.tolist()
-
-
-# In[23]:
+# In[6]:
 
 
 def rm_nan(list_of_list):
@@ -88,45 +78,42 @@ def rm_nan(list_of_list):
     return [[x for x in list_ if x == x] for list_ in list_of_list]
     
 df['INPUT_CONTEXT_L'] = rm_nan(df.iloc[:,col_num_IN:col_num_OUT].values.tolist())
-df['USER_SAYS_L'] = rm_nan(df.iloc[:,col_num_USER:col_num_RESP].values.tolist())
-df['RESPONSES_L'] = rm_nan(df.iloc[:,col_num_RESP:col_num_total].values.tolist())
+df['OUTPUT_CONTEXT_L'] = rm_nan(df.iloc[:,col_num_OUT:col_num_USER].values.tolist())
+df['USER_SAYS_L'] = rm_nan(df.iloc[:,col_num_USER:cols_num_RESP[0]].values.tolist())
+for i,col_num_RESP in enumerate(cols_num_RESP[:-1]):
+    df['RESPONSES_L_{}'.format(i)] = rm_nan(df.iloc[:,col_num_RESP:cols_num_RESP[i+1]].values.tolist())
 
 
-# In[24]:
+# In[7]:
 
 
 # combine columns, ignoring nan
 # https://stackoverflow.com/questions/45787782/combine-multiple-columns-in-pandas-excluding-nans
 # df['INPUT_CONTEXT_L'] = df.iloc[:,col_num_IN:col_num_OUT].apply(lambda x: list(x.dropna()), axis=1).values.tolist()
+# df['OUTPUT_CONTEXT_L'] = df.iloc[:,col_num_OUT:col_num_USER].apply(lambda x: list(x.dropna()), axis=1).values.tolist()
 # df['USER_SAYS_L'] = df.iloc[:,col_num_USER:col_num_RESP].apply(lambda x: list(x.dropna()), axis=1).values.tolist()
 # df['RESPONSES_L'] = df.iloc[:,col_num_RESP:col_num_total].apply(lambda x: list(x.dropna()), axis=1).values.tolist()
-df['OUTPUT_CONTEXT_L'] = df.iloc[:,col_num_OUT:col_num_USER].apply(lambda x: list(x.dropna()), axis=1).values.tolist()
 # I don't understand why line 1 works but line 3 and 4 don't work. WTF.
 
 
-# In[25]:
+# In[8]:
 
 
 df
 
 
-# In[26]:
-
-
-df['OUTPUT_CONTEXT_L']
-
-
-# In[27]:
+# In[9]:
 
 
 # # for line in rows of excel
 # intent_df_row = None 
 for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
+#     if index == 4:
     intent_df_row = row
     #     break
 
 
-    # In[28]:
+    # In[10]:
 
 
     intent_name = intent_df_row['INTENT_NAME']
@@ -134,16 +121,11 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
     output_contexts = [[y.strip() for y in x.split(',')]
                        for x in intent_df_row['OUTPUT_CONTEXT_L']]
     training_phrases = intent_df_row['USER_SAYS_L']
-    responses = intent_df_row['RESPONSES_L']
+    responses = [intent_df_row['RESPONSES_L_{}'.format(i)] for i,x in enumerate(cols_num_RESP[:-1])]
+    responses = [x for x in responses if x != []]
 
 
-    # In[29]:
-
-
-    print(output_contexts)  # I don't know why does this work
-
-
-    # In[30]:
+    # In[11]:
 
 
     # define a list/dictionary for {intent_name}.json
@@ -165,12 +147,14 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
         intent_jsonfile_responses["affectedContexts"].append(affectedContext)
 
     intent_jsonfile_responses["parameters"] = []
-    intent_jsonfile_responses["messages"] = []  # probably allow for list of messages?
-    message = {}
-    message["type"] = 0
-    message["lang"] = "en"
-    message["speech"] = responses
-    intent_jsonfile_responses["messages"].append(message)
+    intent_jsonfile_responses["messages"] = []  # probably allow for list of messages? yes
+
+    for response_bubble in responses:
+        message = {}
+        message["type"] = 0
+        message["lang"] = "en"
+        message["speech"] = response_bubble
+        intent_jsonfile_responses["messages"].append(message)
 
     intent_jsonfile_responses["defaultResponsePlatforms"] = []
     intent_jsonfile_responses["speech"] = []
@@ -183,8 +167,12 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
     intent_jsonfile["fallbackIntent"] =  False
     intent_jsonfile["events"] = []
 
+    # 'messages': [{'speech': '<3', 'lang': 'en', 'type': 0}, 
+    #              {'speech': 'this is a second response bubble', 'lang': 'en', 'type': 0}, 
+    #              {'payload': {'trap': 'trying to break this system'}, 'lang': 'en', 'type': 4}]
 
-    # In[31]:
+
+    # In[12]:
 
 
     print(json.dumps(intent_jsonfile))
@@ -231,7 +219,7 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
     #   "events": []
     # }
 
-    # In[32]:
+    # In[13]:
 
 
     # define a list/dictionary for {intent_usersays_name}.json
@@ -251,7 +239,7 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
         intent_usersays_jsonfile.append(user_say)
 
 
-    # In[33]:
+    # In[14]:
 
 
     print(json.dumps(intent_usersays_jsonfile))
@@ -277,7 +265,9 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
     #   }
     # ]
 
-    # In[34]:
+    # In[15]:
+
+
     intent_name = re.sub(r"[^a-zA-Z0-9- ]", '_', intent_name)
 
     with open('temp/{}/intents/{}.json'.format(FILE_NAME, intent_name), 'w') as outfile:
@@ -289,7 +279,7 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
     # then process the next intent
 
 
-# In[35]:
+# In[16]:
 
 
 # "project": "newagent-fcefe" may be an issue
@@ -333,17 +323,12 @@ agent_json = '''{
 }'''
 
 
-# In[36]:
+# In[17]:
 
 
-# os.system("rm template.zip")
+os.system("rm template.zip")
 os.system("cd temp/{}/ && zip -r ../{}.zip * -x *.DS_Store".format(FILE_NAME, FILE_NAME))
 
 
-# In[37]:
+# In[18]:
 
-
-# get_ipython().system('jupyter nbconvert --to script *.ipynb')
-
-
-# In[ ]:
