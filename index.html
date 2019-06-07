@@ -20,18 +20,20 @@
       To dialogflow .zip file to convert .csv spreadsheet <br>
       Please download the chatbot file from your dialogflow console. <br>
       Left panel - Settings (gear icon) &gt Export & Import &gt EXPORT AS ZIP <br>
-      Alternatively you could use <a href="df-to-csv/template.zip" download>our template</a>.
+      Alternatively you could use <a href="df-to-csv/temp/template.zip" download>our template</a>.
     </p>
     
     <form enctype="multipart/form-data" action="http://35.247.161.162:5000" method="POST">
-    <input type="file" name="file-to-convert" accept=".zip"> 
+    <input type="file" name="file-to-convert" accept=".zip">
+    <button type="submit">Submit</button>
+    </form>
     
     <h1>.csv to .zip</h1>
     <p>
       To convert .csv spreadsheet into dialogflow .zip file. <br>
       Please follow the spreadsheet format. <br>
       You can refer to the .csv converted from dialogflow .zip<br> 
-      Alteratively, you can refer to <a href="df-to-csv/template.csv" download>our template</a>.
+      Alteratively, you can refer to <a href="df-to-csv/temp/template.csv" download>our template</a>.
     </p>
     
     <form enctype="multipart/form-data" action="http://35.247.161.162:4000" method="POST">
