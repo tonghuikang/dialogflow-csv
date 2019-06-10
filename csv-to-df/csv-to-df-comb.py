@@ -114,7 +114,7 @@ df
 # intent_df_row = None 
 for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
 #     if index == 4:
-#         intent_df_row = row
+    intent_df_row = row
 #     break
 
 

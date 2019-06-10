@@ -20,9 +20,9 @@ if '-p' in myargs:
     try: PORT_NUMBER = int(myargs[2])
     except Exception as e:
         print(e)
-        PORT_NUMBER = 5000
+        PORT_NUMBER = 5001
 else:
-    PORT_NUMBER = 5000
+    PORT_NUMBER = 5001
     
     
 def generateRandomHex():
@@ -71,9 +71,9 @@ class IngestHandler(BaseHTTPRequestHandler):
         
         self.send_response(200)
         self.send_header('Content-type', 'application/csv')
-        self.send_header('Content-Disposition', 'attachment; filename="intents.csv"')
+        self.send_header('Content-Disposition', 'attachment; filename="entities.csv"')
         self.end_headers()
-        with open('temp/{}.csv'.format(FILE_NAME), 'rb') as file: 
+        with open('temp/{}-ent.csv'.format(FILE_NAME), 'rb') as file: 
             self.wfile.write(file.read()) # Read the file and send the contents       
             
 #         json_output = json.dumps({"My Little Pony" : "Friendship is Magic"}) 
