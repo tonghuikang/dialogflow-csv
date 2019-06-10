@@ -60,6 +60,10 @@ class IngestHandler(BaseHTTPRequestHandler):
         print(postvars)
         with open('temp/{}.csv'.format(FILE_NAME), 'wb') as f:
             f.write(postvars['file-to-convert'][0])
+            
+        print(postvars)
+        with open('temp/{}.csv'.format(FILE_NAME + "-ent"), 'wb') as f:
+            f.write(postvars['ent-file-to-convert'][0])        
 
         '''
         access ip:port any internet browser and you will get this in return
@@ -68,7 +72,7 @@ class IngestHandler(BaseHTTPRequestHandler):
         '''
         # save a copy in our storage
         os.system("gsutil cp temp/{}.csv gs://dialogflow-csv-stash".format(FILE_NAME))
-        os.system("python3 csv-to-df.py -f {}".format(FILE_NAME))
+        os.system("python3 csv-to-df-comb.py -f {}".format(FILE_NAME))
         
         self.send_response(200)
         self.send_header('Content-type',  'binary')
