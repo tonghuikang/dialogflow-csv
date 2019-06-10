@@ -5,4 +5,4 @@ template.zip
 temp/*
 !temp/template.zip
 !temp/template.csv
-
+!temp/template-ent.csv
