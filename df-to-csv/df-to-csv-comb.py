@@ -100,7 +100,7 @@ for intent_json in intent_jsons:
             with open(usersays_json, encoding="utf-8") as f:
                 usersays_info = json.load(f)
             for usersay in usersays_info:
-                intent["USER_SAYS"].append(usersay["data"][0]["text"])
+                intent["USER_SAYS"].append("".join([usersay_chunk["text"] for usersay_chunk in usersay["data"]]))
         intents.append(intent)
     #     pp(intent_info)
     #     break
