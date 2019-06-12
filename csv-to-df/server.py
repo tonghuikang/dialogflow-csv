@@ -62,8 +62,14 @@ class IngestHandler(BaseHTTPRequestHandler):
             f.write(postvars['file-to-convert'][0])
             
         print(postvars)
-        with open('temp/{}.csv'.format(FILE_NAME + "-ent"), 'wb') as f:
-            f.write(postvars['ent-file-to-convert'][0])        
+        if postvars['ent-file-to-convert'][0] == "":
+            with open('temp/{}.csv'.format(FILE_NAME + "-ent"), 'wb') as f:
+                print("checky")
+                f.write(postvars['ent-file-to-convert'][0])
+        else:
+            os.system("cp temp/template-ent-empty.csv temp/{}.csv".format(FILE_NAME + "-ent"))
+            print("cp temp/template-ent-empty.csv temp/{}.csv".format(FILE_NAME + "-ent"))
+
 
         '''
         access ip:port any internet browser and you will get this in return
