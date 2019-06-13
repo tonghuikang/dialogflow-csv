@@ -60,15 +60,14 @@ class IngestHandler(BaseHTTPRequestHandler):
         print(postvars)
         with open('temp/{}.csv'.format(FILE_NAME), 'wb') as f:
             f.write(postvars['file-to-convert'][0])
-            
-        if postvars['ent-file-to-convert'][0] != "":
-            with open('temp/{}.csv'.format(FILE_NAME + "-ent"), 'wb') as f:
-                f.write(postvars['ent-file-to-convert'][0])
-        else:
+        
+        if postvars['ent-file-to-convert'] == [b'']:
             os.system("cp temp/template-ent-empty.csv temp/{}.csv".format(FILE_NAME + "-ent"))
             print("cp temp/template-ent-empty.csv temp/{}.csv".format(FILE_NAME + "-ent"))
-
-
+        else:
+            with open('temp/{}.csv'.format(FILE_NAME + "-ent"), 'wb') as f:
+                f.write(postvars['ent-file-to-convert'][0])
+        
         '''
         access ip:port any internet browser and you will get this in return
         {"My Little Pony" : "Friendship is Magic"}

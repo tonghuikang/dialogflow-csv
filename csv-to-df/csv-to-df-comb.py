@@ -396,9 +396,10 @@ entities = entities[1:]
 
 # In[48]:
 
-
-pp(entities)
-
+try:
+    pp(entities)
+except:
+    pass
 
 # In[49]:
 
