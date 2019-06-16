@@ -1,9 +1,9 @@
 # sudo apt-get install python3-pip
 # pip3 install pandas
-# not intended for concurrent usage
 
 import time
 import json
+from urllib.request import urlretrieve
 import random
 import datetime
 from http.server import *
@@ -53,26 +53,39 @@ class IngestHandler(BaseHTTPRequestHandler):
         
     def do_POST(self):
         postvars = self.parse_POST()
-        
+        print(postvars)
+
         FILE_NAME = generateRandomHex()
         print(FILE_NAME)
         
-        print(postvars)
-        with open('temp/{}.csv'.format(FILE_NAME), 'wb') as f:
-            f.write(postvars['file-to-convert'][0])
-        
-        if postvars['ent-file-to-convert'] == [b'']:
-            os.system("cp temp/template-ent-empty.csv temp/{}.csv".format(FILE_NAME + "-ent"))
-            print("cp temp/template-ent-empty.csv temp/{}.csv".format(FILE_NAME + "-ent"))
+        if postvars['sheetsID'] != None:
+            
+#             command = "wget --output-document temp/{}.csv https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&sheet=intents".format(FILE_NAME, postvars['sheetsID'][0].decode('utf-8'))
+#             print(command)
+            
+            urlretrieve("https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&sheet=intents".format(postvars['sheetsID'][0].decode('utf-8')), 
+                               filename="temp/{}.csv".format(FILE_NAME))
+#             os.system(command)
+            
+            urlretrieve("https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&sheet=entities".format(postvars['sheetsID'][0].decode('utf-8')), 
+                               filename="temp/{}-ent.csv".format(FILE_NAME))
+#             os.system(command)
+            
+#             command = "wget --output-document temp/{}-ent.csv https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&sheet=entities".format(FILE_NAME, postvars['sheetsID'][0].decode('utf-8'))
+#             print(command)
+#             os.system(command)
+            
         else:
-            with open('temp/{}.csv'.format(FILE_NAME + "-ent"), 'wb') as f:
-                f.write(postvars['ent-file-to-convert'][0])
+            with open('temp/{}.csv'.format(FILE_NAME), 'wb') as f:
+                f.write(postvars['file-to-convert'][0])
+
+            if postvars['ent-file-to-convert'] == [b'']:
+                os.system("cp temp/template-ent-empty.csv temp/{}.csv".format(FILE_NAME + "-ent"))
+                print("cp temp/template-ent-empty.csv temp/{}.csv".format(FILE_NAME + "-ent"))
+            else:
+                with open('temp/{}.csv'.format(FILE_NAME + "-ent"), 'wb') as f:
+                    f.write(postvars['ent-file-to-convert'][0])
         
-        '''
-        access ip:port any internet browser and you will get this in return
-        {"My Little Pony" : "Friendship is Magic"}
-        same if you use GET function in Postman
-        '''
         # save a copy in our storage
         os.system("gsutil cp temp/{}.csv gs://dialogflow-csv-stash".format(FILE_NAME))
         os.system("python3 csv-to-df-comb.py -f {}".format(FILE_NAME))
@@ -84,22 +97,38 @@ class IngestHandler(BaseHTTPRequestHandler):
         with open('temp/{}.zip'.format(FILE_NAME), 'rb') as file: 
             self.wfile.write(file.read()) # Read the file and send the contents
         
-#         json_output = json.dumps({"My Little Pony" : "Friendship is Magic"}) 
-#         self.send_response(200)
-#         self.send_header('Content-type', 'application/json')
-#         self.end_headers()
-#         parsed_path = urlparse(self.path)
-        
-#         with open('upload.zip', 'rb') as f:
-#             self.wfile.write(f.read())
-        
-#         self.wfile.write(json_output.encode())
-        
         os.system("rm temp/{}.csv".format(FILE_NAME))
         os.system("rm temp/{}.zip".format(FILE_NAME))
         os.system("rm -rf temp/{}".format(FILE_NAME))
         return True
 
+    def do_PUT(self):
+        postvars = self.parse_POST()
+        print(postvars)
+
+#         FILE_NAME = generateRandomHex()
+#         print(FILE_NAME)
+        
+
+        
+#         # save a copy in our storage
+#         os.system("gsutil cp temp/{}.csv gs://dialogflow-csv-stash".format(FILE_NAME))
+#         os.system("python3 csv-to-df-comb.py -f {}".format(FILE_NAME))
+        
+#         self.send_response(200)
+#         self.send_header('Content-type',  'binary')
+#         self.send_header('Content-Disposition', 'attachment; filename="output.zip"')
+#         self.end_headers()
+#         with open('temp/{}.zip'.format(FILE_NAME), 'rb') as file: 
+#             self.wfile.write(file.read()) # Read the file and send the contents
+        
+#         os.system("rm temp/{}.csv".format(FILE_NAME))
+#         os.system("rm temp/{}.zip".format(FILE_NAME))
+#         os.system("rm -rf temp/{}".format(FILE_NAME))
+#         return True
+
+        
+    
     def do_GET(self):
         '''
         Post this with the POST function in Postman
