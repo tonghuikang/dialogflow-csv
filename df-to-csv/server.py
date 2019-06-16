@@ -10,6 +10,8 @@ from http.server import *
 from urllib.parse import urlparse
 import os
 from cgi import parse_header, parse_multipart
+import pickle
+from googleapiclient.discovery import build
 
 
 HOST_NAME = '0.0.0.0'
@@ -23,6 +25,55 @@ if '-p' in myargs:
         PORT_NUMBER = 5000
 else:
     PORT_NUMBER = 5000
+    
+# upload
+path_to_credentials = 'token.pickle'
+with open(path_to_credentials, 'rb') as token:
+    credentials = pickle.load(token)
+API = build('sheets', 'v4', credentials=credentials)
+
+# convenience routines
+def find_sheet_id_by_name(SPREADSHEET_ID, sheet_name):
+    # ugly, but works
+    sheets_with_properties = API \
+        .spreadsheets() \
+        .get(spreadsheetId=SPREADSHEET_ID, fields='sheets.properties') \
+        .execute() \
+        .get('sheets')
+
+    for sheet in sheets_with_properties:
+        if 'title' in sheet['properties'].keys():
+            if sheet['properties']['title'] == sheet_name:
+                return sheet['properties']['sheetId']
+
+
+def push_csv_to_gsheet(SPREADSHEET_ID, csv_path, sheet_id):
+    with open(csv_path, 'r', encoding='utf-8') as csv_file:
+        csvContents = csv_file.read()
+    body = {
+        'requests': [{
+          "updateCells": {
+            "range": {
+              "sheetId": sheet_id
+            },
+            "fields": "userEnteredValue"
+          }
+        },{
+            'pasteData': {
+                "coordinate": {
+                    "sheetId": sheet_id,
+                    "rowIndex": "0",  # adapt this if you need different positioning
+                    "columnIndex": "0", # adapt this if you need different positioning
+                },
+                "data": csvContents,
+                "type": 'PASTE_NORMAL',
+                "delimiter": ',',
+            }
+        }]
+    }
+    request = API.spreadsheets().batchUpdate(spreadsheetId=SPREADSHEET_ID, body=body)
+    response = request.execute()
+    return response
     
     
 def generateRandomHex():
@@ -86,6 +137,23 @@ class IngestHandler(BaseHTTPRequestHandler):
 #             self.wfile.write(f.read())
         
 #         self.wfile.write(json_output.encode())
+        print("postvars['sheetsID']", postvars['sheetsID'])
+        if postvars['sheetsID'] != None:
+            SPREADSHEET_ID = postvars['sheetsID'][0].decode("utf-8")
+            print("SPREADSHEET_ID", SPREADSHEET_ID)
+
+            push_csv_to_gsheet(
+                SPREADSHEET_ID=SPREADSHEET_ID,
+                csv_path="temp/{}.csv".format(FILE_NAME),
+                sheet_id=find_sheet_id_by_name(SPREADSHEET_ID,"intents")
+            )
+
+            push_csv_to_gsheet(
+                SPREADSHEET_ID=SPREADSHEET_ID,
+                csv_path="temp/{}-ent.csv".format(FILE_NAME),
+                sheet_id=find_sheet_id_by_name(SPREADSHEET_ID,"entities")
+            )
+
         os.system("rm temp/{}.zip".format(FILE_NAME))
         os.system("rm temp/{}.csv".format(FILE_NAME))
         os.system("rm -rf temp/{}".format(FILE_NAME))

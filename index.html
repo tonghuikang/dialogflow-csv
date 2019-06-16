@@ -13,7 +13,7 @@
     <script src="/script.js" defer></script>
   </head>
   <body>
-    
+  
     
     <h1>.zip to .csv</h1>
     <p>
@@ -25,6 +25,8 @@
     
     <form enctype="multipart/form-data" action="http://35.247.161.162:5000" method="POST">
     <input type="file" name="file-to-convert" accept=".zip">
+    <input type="text" name="sheetsID">
+<!--  Experimental feature: Putting .csv file to Google Sheets -->
     <button type="submit">Submit</button>
     </form>
     <form enctype="multipart/form-data" action="http://35.247.161.162:5001" method="POST">
@@ -38,7 +40,9 @@
       Please follow the spreadsheet format. <br>
       You can refer to the .csv converted from dialogflow .zip<br> 
       Alteratively, you can refer to <a href="csv-to-df/temp/template.csv" download>our intent template</a> 
-      and <a href="csv-to-df/temp/template-ent.csv" download>our entities template</a>.
+      and <a href="csv-to-df/temp/template-ent.csv" download>our entities template</a>. 
+      <br> <br>
+      Please note that INTENT_NAME and ENTITY_NAME could only contain alphanumeric characters, dashes or underscores. 
     </p>
     
     <form enctype="multipart/form-data" action="http://35.247.161.162:4000" method="POST">
@@ -47,5 +51,15 @@
     <button type="submit">Submit</button>
     </form>
     
+    <h2>Taking .csv file from Google Sheets</h2>
+    <p>
+      Experimental feature
+    </p>
+    <form enctype="multipart/form-data" action="http://35.247.161.162:4000" method="POST">
+    <input type="text" name="sheetsID">
+    <button type="submit">Submit</button>
+    </form>
+    
   </body>
 </html>
+
