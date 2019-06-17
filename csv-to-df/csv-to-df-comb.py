@@ -290,12 +290,19 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
     intent_name = re.sub(r"[^a-zA-Z0-9- ]", '_', intent_name)
     filepath_prefix = 'temp/{}/intents/{}'.format(FILE_NAME, intent_name)
     counter_file = 0
-
-    # intent_name in the .json files are different
-    # however, we have to prevent collision after the replacement
-    while os.path.isfile("{}.json".format(filepath_prefix)):
-        counter_file += 1
-        filepath_prefix += str(counter_file)
+    
+    
+    if intent_name == "Default Welcome Intent":
+        intent_jsonfile["events"] = [{"name": "WELCOME"}]
+    elif intent_name == "Default Fallback Intent":
+        intent_jsonfile["fallbackIntent"] = True
+        intent_jsonfile["responses"][0]["action"] = "input.unknown"
+    else:
+        # intent_name in the .json files are different
+        # however, we have to prevent collision after the replacement
+        while os.path.isfile("{}.json".format(filepath_prefix)):
+            counter_file += 1
+            filepath_prefix += str(counter_file)
     
     with open("{}.json".format(filepath_prefix), 'w', encoding='utf-8') as outfile:
         json.dump(intent_jsonfile, outfile, ensure_ascii=False)

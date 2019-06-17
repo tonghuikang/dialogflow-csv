@@ -19,7 +19,7 @@
         {
           "type": 0,
           "lang": "en",
-          "speech": "Welcome to ABC law partners. \nWe can help explore whether you have a legal case against someone who has broken an agreement. \nI am not a lawyer, but I provide preliminary analysis based on the facts of your case. This service is free.\nCan you briefly explain your issue? (e.g. my customer did not pay me, the goods was defective)"
+          "speech": "This is a default welcome speech. You can customise this."
         }
       ],
       "defaultResponsePlatforms": {},
