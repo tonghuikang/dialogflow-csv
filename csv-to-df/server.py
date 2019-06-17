@@ -58,22 +58,13 @@ class IngestHandler(BaseHTTPRequestHandler):
         FILE_NAME = generateRandomHex()
         print(FILE_NAME)
         
-        if postvars['sheetsID'] != None:
-            
-#             command = "wget --output-document temp/{}.csv https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&sheet=intents".format(FILE_NAME, postvars['sheetsID'][0].decode('utf-8'))
-#             print(command)
+        if 'sheetsID' in postvars:
             
             urlretrieve("https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&sheet=intents".format(postvars['sheetsID'][0].decode('utf-8')), 
                                filename="temp/{}.csv".format(FILE_NAME))
-#             os.system(command)
             
             urlretrieve("https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&sheet=entities".format(postvars['sheetsID'][0].decode('utf-8')), 
                                filename="temp/{}-ent.csv".format(FILE_NAME))
-#             os.system(command)
-            
-#             command = "wget --output-document temp/{}-ent.csv https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&sheet=entities".format(FILE_NAME, postvars['sheetsID'][0].decode('utf-8'))
-#             print(command)
-#             os.system(command)
             
         else:
             with open('temp/{}.csv'.format(FILE_NAME), 'wb') as f:
@@ -81,7 +72,6 @@ class IngestHandler(BaseHTTPRequestHandler):
 
             if postvars['ent-file-to-convert'] == [b'']:
                 os.system("cp temp/template-ent-empty.csv temp/{}.csv".format(FILE_NAME + "-ent"))
-                print("cp temp/template-ent-empty.csv temp/{}.csv".format(FILE_NAME + "-ent"))
             else:
                 with open('temp/{}.csv'.format(FILE_NAME + "-ent"), 'wb') as f:
                     f.write(postvars['ent-file-to-convert'][0])
