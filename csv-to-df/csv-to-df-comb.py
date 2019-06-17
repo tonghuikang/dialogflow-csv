@@ -308,7 +308,7 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
         json.dump(intent_jsonfile, outfile, ensure_ascii=False)
     
     with open('{}_usersays_en.json'.format(filepath_prefix), 'w', encoding='utf-8') as outfile:
-        json.dump(intent_jsonfile, outfile, ensure_ascii=False)        
+        json.dump(intent_usersays_jsonfile, outfile, ensure_ascii=False)        
         
 # then process the next intent
 
