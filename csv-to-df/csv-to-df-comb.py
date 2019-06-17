@@ -286,16 +286,23 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
     # ]
 
     # In[42]:
-
-
+        
     intent_name = re.sub(r"[^a-zA-Z0-9- ]", '_', intent_name)
+    filepath_prefix = 'temp/{}/intents/{}'.format(FILE_NAME, intent_name)
+    counter_file = 0
 
-    with open('temp/{}/intents/{}.json'.format(FILE_NAME, intent_name), 'w') as outfile:
-        json.dump(intent_jsonfile, outfile)
-
-    with open('temp/{}/intents/{}_usersays_en.json'.format(FILE_NAME, intent_name), 'w') as outfile:
-        json.dump(intent_usersays_jsonfile, outfile)
-
+    # intent_name in the .json files are different
+    # however, we have to prevent collision after the replacement
+    while os.path.isfile("{}.json".format(filepath_prefix)):
+        counter_file += 1
+        filepath_prefix += str(counter_file)
+    
+    with open("{}.json".format(filepath_prefix), 'w', encoding='utf-8') as outfile:
+        json.dump(intent_jsonfile, outfile, ensure_ascii=False)
+    
+    with open('{}_usersays_en.json'.format(filepath_prefix), 'w', encoding='utf-8') as outfile:
+        json.dump(intent_jsonfile, outfile, ensure_ascii=False)        
+        
 # then process the next intent
 
 
