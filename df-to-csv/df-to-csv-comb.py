@@ -41,11 +41,14 @@ os.system("tree")
 
 
 # In[4]:
-
-
-files = sorted([intent for intent in glob.glob('temp/{}/intents/*.json'.format(FILE_NAME, FILE_NAME))])
+# assumes no curly brackets in intent name
+files = glob.glob('temp/{}/intents/*.json'.format(FILE_NAME, FILE_NAME))
+files = [file.replace(".","{") for file in files]  # Grouping of intents and usersays problematic #15
+files = [file.replace("_","}") for file in files]  
+files = sorted([intent for intent in files])
+files = [file.replace("}","_") for file in files]
+files = [file.replace("{",".") for file in files]
 # files.remove('template/intents/Default Fallback Intent.json')
-# files.remove('template/intents/consideration-no_usersays_en.json')
 
 
 # In[5]:
@@ -57,8 +60,8 @@ intent_hold = "none"
 intent_jsons = []
 for file in files:
     intent_name = file.rpartition('.')[0]
-    if not intent_name.startswith(intent_hold):
-        intent_jsons.append([file])
+    if not intent_name.startswith(intent_hold + "_u"):   # Some intent names are prefix of another #14
+        intent_jsons.append([file])  #15
         intent_hold = intent_name
     else:
         intent_jsons[-1].append(file)
@@ -70,6 +73,7 @@ for file in files:
 intents = []
 for intent_json in intent_jsons:
 #     try:
+        print(intent_json)
         intent = {}
         intent_info_json = intent_json[0]
         usersays_jsons = intent_json[1:] # should be one only
@@ -83,23 +87,26 @@ for intent_json in intent_jsons:
                                     for c in intent_info["responses"][0]["affectedContexts"]]
         intent["RESPONSES"] = []
         
-        for message in intent_info["responses"][0]["messages"]:
-            if message["type"] == 0:
-                if type(message["speech"]) == list:
-                    intent["RESPONSES"].append(message["speech"])
+        # print(intent_info) - may not be able to print unicode strings
+        if "messages" in intent_info["responses"][0]:  # may not have "messages"
+            for message in intent_info["responses"][0]["messages"]:
+                if message["type"] == 0:
+                    if type(message["speech"]) == list:
+                        intent["RESPONSES"].append(message["speech"])
+                    else:
+                        intent["RESPONSES"].append([message["speech"]])
+                elif message["type"] == 4:
+                    intent["RESPONSES"].append([json.dumps(message["payload"])])
                 else:
-                    intent["RESPONSES"].append([message["speech"]])
-            elif message["type"] == 4:
-                intent["RESPONSES"].append([json.dumps(message["payload"])])
-            else:
-                pass
-#         print()
+                    pass
+    #         print()
         
         intent["USER_SAYS"] = []
         for usersays_json in usersays_jsons: # should be one or none
             with open(usersays_json, encoding="utf-8") as f:
                 usersays_info = json.load(f)
             for usersay in usersays_info:
+                # print([usersay_chunk["text"] for usersay_chunk in usersay["data"]])  # cannot print \u0027
                 intent["USER_SAYS"].append("".join([usersay_chunk["text"] for usersay_chunk in usersay["data"]]))
         intents.append(intent)
     #     pp(intent_info)
