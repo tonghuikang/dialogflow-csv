@@ -60,7 +60,7 @@ intent_hold = "none"
 intent_jsons = []
 for file in files:
     intent_name = file.rpartition('.')[0]
-    if not intent_name.startswith(intent_hold + "_u"):   # Some intent names are prefix of another #14
+    if not intent_name.startswith(intent_hold + "_usersays"):   # Some intent names are prefix of another #14
         intent_jsons.append([file])  #15
         intent_hold = intent_name
     else:
@@ -72,7 +72,7 @@ for file in files:
 
 intents = []
 for intent_json in intent_jsons:
-#     try:
+    try:
         print(intent_json)
         intent = {}
         intent_info_json = intent_json[0]
@@ -111,7 +111,7 @@ for intent_json in intent_jsons:
         intents.append(intent)
     #     pp(intent_info)
     #     break
-#     except:
+    except:
         pass
 
 
@@ -187,11 +187,18 @@ df.to_csv("temp/{}.csv".format(FILE_NAME))
 
 # In[6]:
 
-
-files = sorted([entity for entity in glob.glob('temp/{}/entities/*.json'.format(FILE_NAME, FILE_NAME))])
-files
-
-
+files = glob.glob('temp/{}/entities/*.json'.format(FILE_NAME, FILE_NAME))
+files = [file.replace(".","{") for file in files]  # Grouping of intents and usersays problematic #15
+files = [file.replace("_","}") for file in files]  
+files = [file.replace("entries","!") for file in files]  
+files = sorted([intent for intent in files])
+for file in files:
+    print(file)
+files = [file.replace("}","_") for file in files]
+files = [file.replace("{",".") for file in files]
+files = [file.replace("!","entries") for file in files]  
+for file in files:
+    print(file)
 # In[7]:
 
 
@@ -200,7 +207,7 @@ entity_hold = "none"
 entity_jsons = []
 for file in files:
     entity_name = file.rpartition('.')[0]
-    if not entity_name.startswith(entity_hold):
+    if not entity_name.startswith(entity_hold + "_entries"):  # entities pairing is also problematic #16
         entity_jsons.append([file])
         entity_hold = entity_name
     else:
@@ -214,6 +221,7 @@ entity_jsons
 entities = []
 for entity_json in entity_jsons:
 #     try:
+        print(entity_json)
         entity = {}
         entity_info_json = entity_json[0]
         usersays_jsons = entity_json[1:] # should be one only
@@ -231,8 +239,8 @@ for entity_json in entity_jsons:
                 entity["ENTRIES"].append({usersay['value']:usersay['synonyms']})
         
         entities.append(entity)
-
-
+#     except:
+#         pass
 # In[9]:
 
 
