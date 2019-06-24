@@ -14,6 +14,8 @@ from pprint import pprint as pp
 
 # In[2]:
 
+# def print(*args):
+#     pass
 
 # loading testing template
 import sys
@@ -38,16 +40,32 @@ if FILE_NAME[0] == "/":
 os.system("rm -rf ./temp/template")
 os.system("unzip temp/{}.zip -d temp/{}".format(FILE_NAME, FILE_NAME))
 os.system("tree")
+os.system("echo {}".format(FILE_NAME))
 
 
 # In[4]:
-# assumes no curly brackets in intent name
+
+import random
+def generate_ID():
+    c = ["".join([random.choice('01234567890abcdef') for _ in range(4)]) 
+         for _ in range(8)]
+    return c[0]+c[1]+"-"+c[2]+"-"+c[3]+"-"+c[4]+"-"+c[5]+c[6]+c[7]
+rand_string = generate_ID()
+
+def rreplace(s, old, new, count=1):
+     return (s[::-1].replace(old[::-1], new[::-1], count))[::-1]
+
+# please test this code
+# - "_usersays" multiple times
+# - "!!!" multiple times
 files = glob.glob('temp/{}/intents/*.json'.format(FILE_NAME, FILE_NAME))
-files = [file.replace(".","{") for file in files]  # Grouping of intents and usersays problematic #15
-files = [file.replace("_","}") for file in files]  
+files = [file.replace("!!!", rand_string) for file in files]  
+files = [file.replace(".json","!!!!<<.json>>!!!!") for file in files]  
+files = [rreplace(file, "_usersays","!!!<<usersays>>!!!") for file in files]  
 files = sorted([intent for intent in files])
-files = [file.replace("}","_") for file in files]
-files = [file.replace("{",".") for file in files]
+files = [file.replace("!!!<<usersays>>!!!","_usersays") for file in files]  
+files = [file.replace("!!!!<<.json>>!!!!",".json") for file in files]
+files = [file.replace(rand_string,"!!!") for file in files]  
 # files.remove('template/intents/Default Fallback Intent.json')
 
 
@@ -72,7 +90,7 @@ for file in files:
 
 intents = []
 for intent_json in intent_jsons:
-    try:
+#     try:
         print(intent_json)
         intent = {}
         intent_info_json = intent_json[0]
@@ -111,8 +129,8 @@ for intent_json in intent_jsons:
         intents.append(intent)
     #     pp(intent_info)
     #     break
-    except:
-        pass
+#     except:
+#         pass
 
 
 # In[7]:
@@ -187,18 +205,19 @@ df.to_csv("temp/{}.csv".format(FILE_NAME))
 
 # In[6]:
 
+# please test this code
+# - "_entries" multiple times
+# - "!!!" multiple times
 files = glob.glob('temp/{}/entities/*.json'.format(FILE_NAME, FILE_NAME))
-files = [file.replace(".","{") for file in files]  # Grouping of intents and usersays problematic #15
-files = [file.replace("_","}") for file in files]  
-files = [file.replace("entries","!") for file in files]  
+files = [file.replace("!!!", rand_string) for file in files]  
+files = [file.replace(".json","!!!!<<.json>>!!!!") for file in files]  
+files = [rreplace(file, "_entries","!!!<<entries>>!!!") for file in files]  
 files = sorted([intent for intent in files])
-for file in files:
-    print(file)
-files = [file.replace("}","_") for file in files]
-files = [file.replace("{",".") for file in files]
-files = [file.replace("!","entries") for file in files]  
-for file in files:
-    print(file)
+files = [file.replace("!!!<<entries>>!!!","_entries") for file in files]  
+files = [file.replace("!!!!<<.json>>!!!!",".json") for file in files]
+files = [file.replace(rand_string,"!!!") for file in files]  
+
+
 # In[7]:
 
 
