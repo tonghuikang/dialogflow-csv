@@ -40,6 +40,7 @@ def generate_ID():
 
 repl_left_curl = generate_ID()
 repl_right_curl = generate_ID()
+repl_esc_char = generate_ID()
 repl_ent_tagger = generate_ID()
 
 # In[30]:
@@ -253,19 +254,19 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
         user_say["data"] = []  # no entities for now and the near future
         
         snippets = []
-        # does not consistently replace all
-        training_phrase.replace("\\{", repl_left_curl)
-        training_phrase.replace("\\}", repl_right_curl)
+        training_phrase = training_phrase.replace("\\{", repl_left_curl)
+        training_phrase = training_phrase.replace("\\}", repl_right_curl)
         training_phrase = training_phrase.replace("{", "{" + repl_ent_tagger)
         training_phrase = training_phrase.replace("}", "{")
         text_snippets = training_phrase.split("{")
         for text_snippet in text_snippets:
             try:
-                # does not support all edge cases
+                # may not support all edge cases
                 snippet = {}
                 snippet["userDefined"] = False
-                text_snippet.replace(repl_left_curl, "{")
-                text_snippet.replace(repl_right_curl, "}")
+                text_snippet = text_snippet.replace(repl_left_curl, "{")
+                text_snippet = text_snippet.replace(repl_right_curl, "}")
+                text_snippet_ = text_snippet
                 if text_snippet.startswith(repl_ent_tagger):
                     text_snippet = text_snippet[len(repl_ent_tagger):]
                     entity_name, alias, text_snippet = text_snippet.split(",",2)
@@ -277,10 +278,12 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
                 snippets.append(snippet)
             except:
                 print("error parsing snippet : ", ascii(text_snippet))
-                
+                snippet = {}
+                snippet["userDefined"] = False
+                snippet["text"] = text_snippet_
+                snippets.append(snippet)
                 
         user_say["data"] = snippets
-
         user_say["isTemplate"] = False
         user_say["count"] = 0
         user_say["updated"] = int(time.time())
