@@ -54,6 +54,10 @@ rand_string = generate_ID()
 
 def rreplace(s, old, new, count=1):
      return (s[::-1].replace(old[::-1], new[::-1], count))[::-1]
+    
+def escape_curly_braces(text):
+    return text.replace("}", "\\}").replace("{", "\\{")  # use of blackslash problematic
+
 
 # please test this code
 # - "_usersays" multiple times
@@ -103,8 +107,11 @@ for intent_json in intent_jsons:
         intent["INPUT_CONTEXT"] = intent_info["contexts"]
         intent["OUTPUT_CONTEXT"] = [str(c["lifespan"]) + ", " + str(c["name"])  
                                     for c in intent_info["responses"][0]["affectedContexts"]]
-        intent["RESPONSES"] = []
+        intent["PARAMETERS"] = ""
+        if "parameters" in intent_info["responses"][0]:
+            intent["PARAMETERS"] = json.dumps(intent_info["responses"][0]["parameters"])
         
+        intent["RESPONSES"] = []
         # print(intent_info) - may not be able to print unicode strings
         if "messages" in intent_info["responses"][0]:  # may not have "messages"
             for message in intent_info["responses"][0]["messages"]:
@@ -124,13 +131,26 @@ for intent_json in intent_jsons:
             with open(usersays_json, encoding="utf-8") as f:
                 usersays_info = json.load(f)
             for usersay in usersays_info:
-                # print([usersay_chunk["text"] for usersay_chunk in usersay["data"]])  # cannot print \u0027
-                intent["USER_SAYS"].append("".join([usersay_chunk["text"] for usersay_chunk in usersay["data"]]))
+                usersay_str = ""
+                for usersay_chunk in usersay["data"]:
+                    if "text" not in usersay_chunk:
+                        # It could have been {"userDefined": false}
+                        continue
+                    text = usersay_chunk["text"]
+                    text = escape_curly_braces(text)
+                    if "alias" not in usersay_chunk:
+                        usersay_chunk["alias"] = ""
+                    if "meta" in usersay_chunk:
+                        usersay_str += "{" + usersay_chunk["meta"] + "," + usersay_chunk["alias"] +  "," + text + "}"
+                    else:
+                        usersay_str += text
+                intent["USER_SAYS"].append(usersay_str)
         intents.append(intent)
     #     pp(intent_info)
     #     break
 #     except:
 #         pass
+
 
 
 # In[7]:
@@ -159,7 +179,7 @@ len_USER_SAYS = max([len(intent["USER_SAYS"]) for intent in intents]+[1])
 lens_RESPONSES = []  # find out the max number of variants of the i-th response
 for i in range(MAX_TOTAL_RESPONSES):
     lens_RESPONSES.append(max([len(intent["RESPONSES"][i]) for intent in intents]+[1]))
-lengths = [1, len_INPUT_CONTEXT, len_OUTPUT_CONTEXT, len_USER_SAYS, *lens_RESPONSES]
+lengths = [2, len_INPUT_CONTEXT, len_OUTPUT_CONTEXT, len_USER_SAYS, *lens_RESPONSES]
 
 
 # In[10]:
@@ -168,12 +188,12 @@ lengths = [1, len_INPUT_CONTEXT, len_OUTPUT_CONTEXT, len_USER_SAYS, *lens_RESPON
 row_length = sum(lengths)
 columns = [""]*row_length
 columns[0] = "INTENT_NAME"
+columns[1] = "PARAMETERS"
 columns[sum(lengths[:1])] = "INPUT_CONTEXT"
 columns[sum(lengths[:2])] = "OUTPUT_CONTEXT"
 columns[sum(lengths[:3])] = "USER_SAYS"
 for i in range(MAX_TOTAL_RESPONSES):
     columns[sum(lengths[:4+i])] = "RESPONSES"
-
 
 # In[11]:
 
@@ -182,13 +202,13 @@ row_list = []
 for intent in intents:
     row = [np.nan]*row_length
     row[0] = intent["INTENT_NAME"]
+    row[1] = intent["PARAMETERS"]
     row[sum(lengths[:1]):sum(lengths[:1])+len(intent["INPUT_CONTEXT"])] = intent["INPUT_CONTEXT"]
     row[sum(lengths[:2]):sum(lengths[:2])+len(intent["OUTPUT_CONTEXT"])] = intent["OUTPUT_CONTEXT"]
     row[sum(lengths[:3]):sum(lengths[:3])+len(intent["USER_SAYS"])] = intent["USER_SAYS"]
     for i in range(MAX_TOTAL_RESPONSES):
         row[sum(lengths[:4+i]):sum(lengths[:4+i])+len(intent["RESPONSES"][i])] = intent["RESPONSES"][i]
     row_list.append(row)
-
 
 # In[12]:
 
@@ -236,14 +256,14 @@ entity_jsons
 
 # In[8]:
 
-
+# change variable names please - BAD NAMING
 entities = []
 for entity_json in entity_jsons:
 #     try:
         print(entity_json)
         entity = {}
         entity_info_json = entity_json[0]
-        usersays_jsons = entity_json[1:] # should be one only
+        usersays_jsons = entity_json[1:] # could be different from one only
 
         with open(entity_info_json, encoding="utf-8") as f:
             entity_info = json.load(f)
@@ -251,7 +271,7 @@ for entity_json in entity_jsons:
         entity["ENTITY_NAME"] = entity_info["name"]
         entity["ENTRIES"] = []
         
-        for usersays_json in usersays_jsons: # should be one or none
+        for usersays_json in usersays_jsons: # could be different from one only
             with open(usersays_json, encoding="utf-8") as f:
                 usersays_info = json.load(f)
             for usersay in usersays_info:

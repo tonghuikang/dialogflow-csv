@@ -38,8 +38,9 @@ def generate_ID():
          for _ in range(8)]
     return c[0]+c[1]+"-"+c[2]+"-"+c[3]+"-"+c[4]+"-"+c[5]+c[6]+c[7]
 
-generate_ID()
-
+repl_left_curl = generate_ID()
+repl_right_curl = generate_ID()
+repl_ent_tagger = generate_ID()
 
 # In[30]:
 
@@ -63,7 +64,8 @@ df
 
 
 # get column number for manipulation next
-col_num_INTENT_NAME = df.columns.get_loc("INTENT_NAME")
+col_num_INTENT_NAME = df.columns.get_loc("INTENT_NAME")  # variable not used?
+col_num_PARAMETERS = df.columns.get_loc("PARAMETERS")  # variable not used?
 col_num_IN = df.columns.get_loc("INPUT_CONTEXT")
 col_num_OUT = df.columns.get_loc("OUTPUT_CONTEXT")
 col_num_USER = df.columns.get_loc("USER_SAYS")
@@ -122,6 +124,7 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
 
 
     intent_name = intent_df_row['INTENT_NAME']
+    parameters = intent_df_row['PARAMETERS']
     input_contexts = intent_df_row['INPUT_CONTEXT_L']
     output_contexts = [[y.strip() for y in x.split(',')]
                        for x in intent_df_row['OUTPUT_CONTEXT_L']]
@@ -151,7 +154,7 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
         affectedContext["lifespan"] = output_context[0]
         intent_jsonfile_responses["affectedContexts"].append(affectedContext)
 
-    intent_jsonfile_responses["parameters"] = []
+    intent_jsonfile_responses["parameters"] = json.loads(parameters)
     intent_jsonfile_responses["messages"] = []  # probably allow for list of messages? yes
 
 
@@ -248,10 +251,35 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
         user_say = {}
         user_say["id"] = generate_ID()
         user_say["data"] = []  # no entities for now and the near future
-        snippet = {}
-        snippet["text"] = training_phrase
-        snippet["userDefined"] = False
-        user_say["data"] = [snippet]
+        
+        snippets = []
+        # does not consistently replace all
+        training_phrase.replace("\\{", repl_left_curl)
+        training_phrase.replace("\\}", repl_right_curl)
+        training_phrase = training_phrase.replace("{", "{" + repl_ent_tagger)
+        training_phrase = training_phrase.replace("}", "{")
+        text_snippets = training_phrase.split("{")
+        for text_snippet in text_snippets:
+            try:
+                # does not support all edge cases
+                snippet = {}
+                snippet["userDefined"] = False
+                text_snippet.replace(repl_left_curl, "{")
+                text_snippet.replace(repl_right_curl, "}")
+                if text_snippet.startswith(repl_ent_tagger):
+                    text_snippet = text_snippet[len(repl_ent_tagger):]
+                    entity_name, alias, text_snippet = text_snippet.split(",",2)
+                    snippet["meta"] = entity_name  # not sure of the use of "alias" or need or not
+                    if alias != "":
+                        snippet["alias"] = alias
+                    snippet["userDefined"] = True
+                snippet["text"] = text_snippet
+                snippets.append(snippet)
+            except:
+                print("error parsing snippet : ", ascii(text_snippet))
+                
+                
+        user_say["data"] = snippets
 
         user_say["isTemplate"] = False
         user_say["count"] = 0
