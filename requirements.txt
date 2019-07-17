@@ -1,0 +1,8 @@
+numpy==1.16.4
+pandas==0.24.2
+wget==3.2
+google-api-python-client==1.7.9
+google-auth==1.6.3
+google-auth-httplib2==0.0.3
+google-auth-oauthlib==0.4.0
+google-compute-engine==2.8.13
