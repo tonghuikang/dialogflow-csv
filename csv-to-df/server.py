@@ -28,7 +28,11 @@ else:
 def generateRandomHex():
     datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-")
     return datetime_string + '%08x' % random.randrange(16**8)
-    
+
+def extract_sheetsID(url_or_id):
+    url_or_id = "/d/" + url_or_id
+    text_block = url_or_id.split("/")[::-1]
+    return text_block[text_block.index("d")-1]
     
 class IngestHandler(BaseHTTPRequestHandler):
     
@@ -54,27 +58,28 @@ class IngestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         postvars = self.parse_POST()
         print(postvars)
-
+        
+        url_or_id = postvars['sheetsID'][0].decode('utf-8')
+        sheetsID = extract_sheetsID(url_or_id)
+        
         FILE_NAME = generateRandomHex()
         print(FILE_NAME)
         
-        if 'sheetsID' in postvars:
-            
-            urlretrieve("https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&sheet=intents".format(postvars['sheetsID'][0].decode('utf-8')), 
-                               filename="temp/{}.csv".format(FILE_NAME))
-            
-            urlretrieve("https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&sheet=entities".format(postvars['sheetsID'][0].decode('utf-8')), 
-                               filename="temp/{}-ent.csv".format(FILE_NAME))
-            
-        else:
-            with open('temp/{}.csv'.format(FILE_NAME), 'wb') as f:
-                f.write(postvars['file-to-convert'][0])
+        urlretrieve("https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&sheet=intents".format(sheetsID), 
+                    filename="temp/{}.csv".format(FILE_NAME))
 
-            if postvars['ent-file-to-convert'] == [b'']:
-                os.system("cp temp/template-ent-empty.csv temp/{}.csv".format(FILE_NAME + "-ent"))
-            else:
-                with open('temp/{}.csv'.format(FILE_NAME + "-ent"), 'wb') as f:
-                    f.write(postvars['ent-file-to-convert'][0])
+        urlretrieve("https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&sheet=entities".format(sheetsID), 
+                    filename="temp/{}-ent.csv".format(FILE_NAME))
+
+#         else:
+#             with open('temp/{}.csv'.format(FILE_NAME), 'wb') as f:
+#                 f.write(postvars['file-to-convert'][0])
+
+#             if postvars['ent-file-to-convert'] == [b'']:
+#                 os.system("cp temp/template-ent-empty.csv temp/{}.csv".format(FILE_NAME + "-ent"))
+#             else:
+#                 with open('temp/{}.csv'.format(FILE_NAME + "-ent"), 'wb') as f:
+#                     f.write(postvars['ent-file-to-convert'][0])
         
         # save a copy in our storage
         os.system("gsutil cp temp/{}.csv gs://dialogflow-csv-stash".format(FILE_NAME))
