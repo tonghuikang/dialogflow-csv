@@ -70,6 +70,9 @@ class IngestHandler(BaseHTTPRequestHandler):
 
         urlretrieve("https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&sheet=entities".format(sheetsID), 
                     filename="temp/{}-ent.csv".format(FILE_NAME))
+        
+        urlretrieve("https://docs.google.com/spreadsheets/d/{}/gviz/tq?tqx=out:csv&sheet=properties".format(sheetsID), 
+                    filename="temp/{}-agent.csv".format(FILE_NAME))
 
 #         else:
 #             with open('temp/{}.csv'.format(FILE_NAME), 'wb') as f:

@@ -220,6 +220,7 @@ class IngestHandler(BaseHTTPRequestHandler):
         SPREADSHEET_ID = create_spreadsheets()
         make_tab(SPREADSHEET_ID, "intents")
         make_tab(SPREADSHEET_ID, "entities")
+        make_tab(SPREADSHEET_ID, "properties")
         delete_default_tab(SPREADSHEET_ID)
         make_public(SPREADSHEET_ID)        
 
@@ -236,7 +237,13 @@ class IngestHandler(BaseHTTPRequestHandler):
             csv_path="temp/{}-ent.csv".format(FILE_NAME),
             sheet_id=find_sheet_id_by_name(SPREADSHEET_ID,"entities")
         )
-
+        
+        push_csv_to_gsheet(
+            SPREADSHEET_ID=SPREADSHEET_ID,
+            csv_path="temp/{}-agent.csv".format(FILE_NAME),
+            sheet_id=find_sheet_id_by_name(SPREADSHEET_ID,"properties")
+        )
+        
         os.system("rm temp/{}.zip".format(FILE_NAME))
         os.system("rm temp/{}.csv".format(FILE_NAME))
         os.system("rm -rf temp/{}".format(FILE_NAME))

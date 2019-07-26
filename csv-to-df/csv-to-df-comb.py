@@ -388,6 +388,7 @@ agent_json = '''{
 }'''
 
 
+############################################################################################
 # # Converting entities
 
 # In[44]:
@@ -490,6 +491,49 @@ for entity in entities:
         json.dump(synonyms_jsonfile, outfile)
 
 
+# In[52]:
+
+############################################################################################
+
+
+# def json_to_csv(json_dict):
+#     csv_list = []
+#     for k,v in json_dict.items():
+#         csv_list.append([k,str(type(v)).split("\'")[1],str(v)])
+#     return csv_list
+
+import ast
+
+def csv_to_json(csv_list):
+    '''csv_list is a list of lists
+    [['key', 'type', 'value represented as string']]'''
+    json_dict = {}
+    for p in csv_list:        
+        if p[1] == 'float':
+            value = float(p[2])
+        elif p[1] == 'int':
+            value = int(p[2])
+        elif p[1] == 'bool':
+            value = (p[2] != "True")
+        elif p[1] == 'dict' or p[1] == 'list':
+            value = ast.literal_eval(p[2])
+        elif p[1] == 'str':
+            value = p[2]
+        else:
+            value = ""
+            print("ERROR, how is this possible?")
+        json_dict[p[0]] = value
+    return json_dict
+
+df_agent = pd.read_csv('temp/{}.csv'.format(FILE_NAME + "-agent"), 
+                       header=0, keep_default_na=False)
+agent_json = csv_to_json(df_agent.values)
+with open('temp/{}/agent.json'.format(FILE_NAME), 'w') as outfile:
+    json.dump(agent_json, outfile)
+
+
+############################################################################################
+        
 # # Zipping folder
 
 # In[51]:
@@ -497,7 +541,4 @@ for entity in entities:
 
 os.system("rm template.zip")
 os.system("cd temp/{}/ && zip -r ../{}.zip * -x *.DS_Store".format(FILE_NAME, FILE_NAME))
-
-
-# In[52]:
 
