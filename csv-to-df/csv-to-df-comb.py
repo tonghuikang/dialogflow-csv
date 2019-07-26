@@ -11,6 +11,7 @@ import os
 import re
 import json
 from pprint import pprint as pp
+import ast
 
 
 # In[2]:
@@ -66,7 +67,7 @@ df
 
 # get column number for manipulation next
 col_num_INTENT_NAME = df.columns.get_loc("INTENT_NAME")  # variable not used?
-col_num_PARAMETERS = df.columns.get_loc("PARAMETERS")  # variable not used?
+col_num_PARAMETERS = df.columns.get_loc("PARAMS")  # variable not used?
 col_num_IN = df.columns.get_loc("INPUT_CONTEXT")
 col_num_OUT = df.columns.get_loc("OUTPUT_CONTEXT")
 col_num_USER = df.columns.get_loc("USER_SAYS")
@@ -125,7 +126,7 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
 
 
     intent_name = intent_df_row['INTENT_NAME']
-    parameters = intent_df_row['PARAMETERS']
+    parameters = intent_df_row['PARAMS']
     input_contexts = intent_df_row['INPUT_CONTEXT_L']
     output_contexts = [[y.strip() for y in x.split(',')]
                        for x in intent_df_row['OUTPUT_CONTEXT_L']]
@@ -347,47 +348,6 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
 # In[43]:
 
 
-# "project": "newagent-fcefe" may be an issue
-agent_json = '''{
-  "description": "",
-  "language": "en",
-  "disableInteractionLogs": false,
-  "disableStackdriverLogs": true,
-  "googleAssistant": {
-    "googleAssistantCompatible": false,
-    "project": "newagent-fcefe",
-    "welcomeIntentSignInRequired": false,
-    "startIntents": [],
-    "systemIntents": [],
-    "endIntentIds": [],
-    "oAuthLinking": {
-      "required": false,
-      "grantType": "AUTH_CODE_GRANT"
-    },
-    "voiceType": "MALE_1",
-    "capabilities": [],
-    "protocolVersion": "V2",
-    "isDeviceAgent": false
-  },
-  "defaultTimezone": "Asia/Hong_Kong",
-  "webhook": {
-    "available": false,
-    "useForDomains": false,
-    "cloudFunctionsEnabled": false,
-    "cloudFunctionsInitialized": false
-  },
-  "isPrivate": true,
-  "customClassifierMode": "use.after",
-  "mlMinConfidence": 0.3,
-  "supportedLanguages": [],
-  "onePlatformApiVersion": "v2",
-  "analyzeQueryTextSentiment": false,
-  "enabledKnowledgeBaseNames": [],
-  "knowledgeServiceConfidenceAdjustment": -0.4,
-  "dialogBuilderMode": false
-}'''
-
-
 ############################################################################################
 # # Converting entities
 
@@ -432,7 +392,9 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
         entities.append(entity)
         entity = {}
         entity_name = intent_df_row['ENTITY_NAME']
+        entity_info = intent_df_row['PARAMS']
         entity["ENTITY_NAME"] = entity_name
+        entity["PARAMS"] = intent_df_row['PARAMS']
         entity["ENTRIES"] = [{intent_df_row['ENTITY_VALUE'] : synomyms}]
     else:
         entity["ENTRIES"].append({intent_df_row['ENTITY_VALUE'] : synomyms})
@@ -467,14 +429,14 @@ except:
 
 # define a list/dictionary for {intent_name}.json
 for entity in entities:
-    entity_jsonfile = {}
-    entity_jsonfile["id"] = generate_ID() # to randomly generate
+    entity_jsonfile = ast.literal_eval(entity["PARAMS"])
+#     entity_jsonfile["id"] = generate_ID() # to randomly generate
     entity_jsonfile["name"] = entity["ENTITY_NAME"]
-    entity_jsonfile["automatedExpansion"] = False  # will change to lowercase when converted to jsonfile
-    entity_jsonfile["allowFuzzyExtraction"] = False
-    entity_jsonfile["isEnum"] = False
-    entity_jsonfile["isOverridable"] = True
-    entity_jsonfile["isRegexp"] = False
+#     entity_jsonfile["automatedExpansion"] = False  # will change to lowercase when converted to jsonfile
+#     entity_jsonfile["allowFuzzyExtraction"] = False
+#     entity_jsonfile["isEnum"] = False
+#     entity_jsonfile["isOverridable"] = True
+#     entity_jsonfile["isRegexp"] = False
 
     synonyms_jsonfile = []
     for entry in entity['ENTRIES']:

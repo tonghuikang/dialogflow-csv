@@ -107,9 +107,9 @@ for intent_json in intent_jsons:
         intent["INPUT_CONTEXT"] = intent_info["contexts"]
         intent["OUTPUT_CONTEXT"] = [str(c["lifespan"]) + ", " + str(c["name"])  
                                     for c in intent_info["responses"][0]["affectedContexts"]]
-        intent["PARAMETERS"] = ""
+        intent["PARAMS"] = ""
         if "parameters" in intent_info["responses"][0]:
-            intent["PARAMETERS"] = json.dumps(intent_info["responses"][0]["parameters"])
+            intent["PARAMS"] = json.dumps(intent_info["responses"][0]["parameters"])
         
         intent["RESPONSES"] = []
         # print(intent_info) - may not be able to print unicode strings
@@ -188,7 +188,7 @@ lengths = [2, len_INPUT_CONTEXT, len_OUTPUT_CONTEXT, len_USER_SAYS, *lens_RESPON
 row_length = sum(lengths)
 columns = [""]*row_length
 columns[0] = "INTENT_NAME"
-columns[1] = "PARAMETERS"
+columns[1] = "PARAMS"
 columns[sum(lengths[:1])] = "INPUT_CONTEXT"
 columns[sum(lengths[:2])] = "OUTPUT_CONTEXT"
 columns[sum(lengths[:3])] = "USER_SAYS"
@@ -202,7 +202,7 @@ row_list = []
 for intent in intents:
     row = [np.nan]*row_length
     row[0] = intent["INTENT_NAME"]
-    row[1] = intent["PARAMETERS"]
+    row[1] = intent["PARAMS"]
     row[sum(lengths[:1]):sum(lengths[:1])+len(intent["INPUT_CONTEXT"])] = intent["INPUT_CONTEXT"]
     row[sum(lengths[:2]):sum(lengths[:2])+len(intent["OUTPUT_CONTEXT"])] = intent["OUTPUT_CONTEXT"]
     row[sum(lengths[:3]):sum(lengths[:3])+len(intent["USER_SAYS"])] = intent["USER_SAYS"]
@@ -271,6 +271,9 @@ for entity_json in entity_jsons:
             entity_info = json.load(f)
 
         entity["ENTITY_NAME"] = entity_info["name"]
+        entity_info_copy = entity_info
+        del entity_info_copy["name"]
+        entity["PARAMS"] = str(entity_info_copy)
         entity["ENTRIES"] = []
         
         for usersays_json in usersays_jsons: # could be different from one only
@@ -294,12 +297,15 @@ entities
 row_list = []
 for entity in entities:
     entity_name = entity["ENTITY_NAME"]
+    entity_property = entity["PARAMS"]
     for entries in entity["ENTRIES"]:
-        row = [entity_name]
+        row = [entity_name, entity_property]
         for key, value in entries.items():
             row += [key]
             row += value
+            # the entity_name and entity_property only appears in the first row
             entity_name = ""
+            entity_property = ""
             break
         row_list.append(row)
 
@@ -307,9 +313,9 @@ for entity in entities:
 # In[11]:
 
 
-max_len = max([3] + [len(row) for row in row_list])
+max_len = max([4] + [len(row) for row in row_list])
 
-columns = ["ENTITY_NAME", "ENTITY_VALUE", "SYNONYMS"] + [""]*(max_len-3)
+columns = ["ENTITY_NAME", "PARAMS", "ENTITY_VALUE", "SYNONYMS"] + [""]*(max_len-4)
 for i,row in enumerate(row_list):
     row_list[i] = row + [""]*(max_len-len(row))
 
