@@ -12,6 +12,7 @@ import os
 from cgi import parse_header, parse_multipart
 import pickle
 from googleapiclient.discovery import build
+from googleapiclient import discovery
 
 
 HOST_NAME = '0.0.0.0'
@@ -30,12 +31,91 @@ else:
 path_to_credentials = 'token.pickle'
 with open(path_to_credentials, 'rb') as token:
     credentials = pickle.load(token)
-API = build('sheets', 'v4', credentials=credentials)
+service = build('drive', 'v3', credentials=credentials)
+
+path_to_credentials = 'token.pickle'
+with open(path_to_credentials, 'rb') as token:
+    credentials = pickle.load(token)
+service_sheets = discovery.build('sheets', 'v4', credentials=credentials)
+
+
+
+def create_spreadsheets():
+    create_spreadsheet_body = {
+      "properties": {
+        "title": "dialogflow-converted"+generateRandomHex()[:8]
+      }
+    }
+
+    create_request = service_sheets.spreadsheets().create(body=create_spreadsheet_body)
+    create_response = create_request.execute()
+    return create_response["spreadsheetId"]
+
+    
+
+def make_tab(SPREADSHEET_ID, tab_name):
+    body = {
+      "requests": [
+        {
+          "addSheet": {
+            "properties": {
+              "title": tab_name
+            }
+          }
+        }
+      ]
+    }
+    
+    request = service_sheets.spreadsheets().batchUpdate(spreadsheetId=SPREADSHEET_ID, body=body)
+    response = request.execute()
+    return response
+
+def delete_default_tab(SPREADSHEET_ID):
+    body = {
+      "requests": [
+        {
+          "deleteSheet": {
+            "sheetId": 0
+          }
+        }
+      ]
+    }
+    
+    request = service_sheets.spreadsheets().batchUpdate(spreadsheetId=SPREADSHEET_ID, body=body)
+    response = request.execute()
+    return response
+
+
+# routine to make public
+def make_public_callback(request_id, response, exception):
+    if exception:
+        print(exception)
+    else:
+        print("Permission Id: %s" % response.get('id'))
+
+        
+def make_public(file_id):
+    batch = service.new_batch_http_request(callback=make_public_callback)
+
+    user_permission = {
+        'type': 'anyone',
+        'role': 'writer',
+    }
+
+    batch.add(service.permissions().create(
+            fileId=file_id,
+            body=user_permission,
+            fields='id',
+    ))
+    
+    batch.execute()
+
 
 # convenience routines
 def find_sheet_id_by_name(SPREADSHEET_ID, sheet_name):
     # ugly, but works
-    sheets_with_properties = API \
+    
+    sheets_with_properties = service_sheets \
         .spreadsheets() \
         .get(spreadsheetId=SPREADSHEET_ID, fields='sheets.properties') \
         .execute() \
@@ -71,10 +151,11 @@ def push_csv_to_gsheet(SPREADSHEET_ID, csv_path, sheet_id):
             }
         }]
     }
-    request = API.spreadsheets().batchUpdate(spreadsheetId=SPREADSHEET_ID, body=body)
+    
+    request = service_sheets.spreadsheets().batchUpdate(spreadsheetId=SPREADSHEET_ID, body=body)
     response = request.execute()
     return response
-    
+
     
 def generateRandomHex():
     datetime_string = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-")
@@ -120,12 +201,9 @@ class IngestHandler(BaseHTTPRequestHandler):
         os.system("gsutil cp temp/{}.zip gs://dialogflow-csv-stash".format(FILE_NAME))
         os.system("python3 df-to-csv-comb.py -f {}".format(FILE_NAME))
         
-        self.send_response(200)
-        self.send_header('Content-type', 'application/csv')
-        self.send_header('Content-Disposition', 'attachment; filename="intents.csv"')
-        self.end_headers()
-        with open('temp/{}.csv'.format(FILE_NAME), 'rb') as file: 
-            self.wfile.write(file.read()) # Read the file and send the contents       
+#         with open('temp/{}.csv'.format(FILE_NAME), 'rb') as file: 
+#             self.wfile.write(file.read()) # Read the file and send the contents       
+            
             
 #         json_output = json.dumps({"My Little Pony" : "Friendship is Magic"}) 
 #         self.send_response(200)
@@ -137,26 +215,48 @@ class IngestHandler(BaseHTTPRequestHandler):
 #             self.wfile.write(f.read())
         
 #         self.wfile.write(json_output.encode())
-        print("postvars['sheetsID']", postvars['sheetsID'])
-        if postvars['sheetsID'] != None:
-            SPREADSHEET_ID = postvars['sheetsID'][0].decode("utf-8")
-            print("SPREADSHEET_ID", SPREADSHEET_ID)
+        
+    
+        SPREADSHEET_ID = create_spreadsheets()
+        make_tab(SPREADSHEET_ID, "intents")
+        make_tab(SPREADSHEET_ID, "entities")
+        make_tab(SPREADSHEET_ID, "properties")
+        delete_default_tab(SPREADSHEET_ID)
+        make_public(SPREADSHEET_ID)        
 
-            push_csv_to_gsheet(
-                SPREADSHEET_ID=SPREADSHEET_ID,
-                csv_path="temp/{}.csv".format(FILE_NAME),
-                sheet_id=find_sheet_id_by_name(SPREADSHEET_ID,"intents")
-            )
+        print("SPREADSHEET_ID", SPREADSHEET_ID)
 
-            push_csv_to_gsheet(
-                SPREADSHEET_ID=SPREADSHEET_ID,
-                csv_path="temp/{}-ent.csv".format(FILE_NAME),
-                sheet_id=find_sheet_id_by_name(SPREADSHEET_ID,"entities")
-            )
+        push_csv_to_gsheet(
+            SPREADSHEET_ID=SPREADSHEET_ID,
+            csv_path="temp/{}.csv".format(FILE_NAME),
+            sheet_id=find_sheet_id_by_name(SPREADSHEET_ID,"intents")
+        )
 
+        push_csv_to_gsheet(
+            SPREADSHEET_ID=SPREADSHEET_ID,
+            csv_path="temp/{}-ent.csv".format(FILE_NAME),
+            sheet_id=find_sheet_id_by_name(SPREADSHEET_ID,"entities")
+        )
+        
+        push_csv_to_gsheet(
+            SPREADSHEET_ID=SPREADSHEET_ID,
+            csv_path="temp/{}-agent.csv".format(FILE_NAME),
+            sheet_id=find_sheet_id_by_name(SPREADSHEET_ID,"properties")
+        )
+        
         os.system("rm temp/{}.zip".format(FILE_NAME))
         os.system("rm temp/{}.csv".format(FILE_NAME))
         os.system("rm -rf temp/{}".format(FILE_NAME))
+        print(SPREADSHEET_ID)
+        
+        sheets_link = "https://docs.google.com/spreadsheets/d/" + SPREADSHEET_ID
+        
+        self.send_response(200)
+        self.send_header('Content-type', 'application/csv')
+        self.send_header('Content-Disposition', 'attachment; filename="intents.csv"')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(sheets_link.encode())
         return True
 
     def do_GET(self):

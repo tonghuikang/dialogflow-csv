@@ -8,50 +8,60 @@
         <!-- import the webpage's stylesheet -->
         <link rel="stylesheet" href="/style.css">
         <!-- import the webpage's javascript file -->
-        <script src="/script.js" defer></script>
+        <!-- <script src="/script.js" defer></script> -->
     </head>
     <body>
         <h1>.zip to .csv</h1>
         <p>
-            To dialogflow .zip file to convert .csv spreadsheet <br>
-            Please download the chatbot file from your dialogflow console. <br>
-            Left panel - Settings (gear icon) &gt Export & Import &gt EXPORT AS ZIP <br>
+            To convert dialogflow .zip file into spreadsheets on Google Sheets <br><br>
+            Please download the chatbot file from your dialogflow console. 
+            Instructions: Left panel - Settings (gear icon) &gt Export & Import &gt EXPORT AS ZIP <br><br>
             Alternatively you could use <a href="df-to-csv/temp/template.zip" download>our template</a>.
         </p>
-        <form enctype="multipart/form-data" action="http://35.247.161.162:5000" method="POST">
-            <input type="file" name="file-to-convert" accept=".zip">
-            <input type="text" name="sheetsID">
-            <!--  Experimental feature: Putting .csv file to Google Sheets -->
-            <button type="submit">Submit</button>
-        </form>
-        <form enctype="multipart/form-data" action="http://35.247.161.162:5001" method="POST">
-            <input type="file" name="file-to-convert" accept=".zip">
-            <button type="submit">Submit</button>
-        </form>
+        <input type="file" id="file-to-convert-zip" accept=".zip"><br>
+        <button id="clicker-df-to-csv">Submit</button>
+        <a id="returnText">Waiting for file.</a>
+        
+
         <h1>.csv to .zip</h1>
         <p>
-            To convert .csv spreadsheet into dialogflow .zip file. <br>
-            Please follow the spreadsheet format. <br>
-            You can refer to the .csv converted from dialogflow .zip<br> 
-            Alteratively, you can refer to <a href="csv-to-df/temp/template.csv" download>our intent template</a> 
-            and <a href="csv-to-df/temp/template-ent.csv" download>our entities template</a>. 
-            <br> <br>
-            Please note that INTENT_NAME and ENTITY_NAME could only contain alphanumeric characters, dashes or underscores. 
-        </p>
-        <form enctype="multipart/form-data" action="http://35.247.161.162:4000" method="POST">
-            <input type="file" name="file-to-convert" accept=".csv">
-            <input type="file" name="ent-file-to-convert" accept=".csv">
-            <button type="submit">Submit</button>
-        </form>
-        <h2>Taking .csv file from Google Sheets</h2>
-        <p>
-            Experimental feature. 
+            To convert back spreadsheets on Google Sheets into dialogflow .zip file. <br><br>
+            Please follow the spreadsheet format converted from dialogflow. <br><br>
+          
+        <!-- Todo: 
+        - Allow whole URL as input
+        - Autofill on complete of the above section.
+        -->
             <a href="https://docs.google.com/spreadsheets/d/1kUg5TlILJ9XiWhowmGvOtBwrMlJTuvuXgUfgBTLZuIg">Sample</a>
             sheets ID (view-only) 1kUg5TlILJ9XiWhowmGvOtBwrMlJTuvuXgUfgBTLZuIg
         </p>
-        <form enctype="multipart/form-data" action="http://35.247.161.162:4000" method="POST">
+        <form enctype="multipart/form-data" action="http://35.240.155.66:4000" method="POST">
             <input type="text" name="sheetsID">
             <button type="submit">Submit</button>
         </form>
+
+        <script>
+        var xhr = new XMLHttpRequest();  
+
+        xhr.onreadystatechange = function() { 
+        if (xhr.readyState == 4){
+            if (xhr.status == 200){
+                var resultLink = xhr.responseText; 
+                document.getElementById("returnText").innerHTML = resultLink;
+                document.getElementById("returnText").href = resultLink;
+        }}};
+
+        document.getElementById("clicker-df-to-csv").addEventListener('click', function() {
+            console.log("running clicker-df-to-csv");
+
+            document.getElementById("returnText").innerHTML = "processing";
+            var formData = new FormData();
+            formData.append("file-to-convert", document.getElementById("file-to-convert-zip").files[0]);
+
+            xhr.open("POST", "http://35.240.155.66:5000/");  
+            xhr.send(formData);
+        })
+        </script>
+
     </body>
 </html>

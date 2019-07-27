@@ -11,6 +11,7 @@ import os
 import re
 import json
 from pprint import pprint as pp
+import ast
 
 
 # In[2]:
@@ -38,8 +39,10 @@ def generate_ID():
          for _ in range(8)]
     return c[0]+c[1]+"-"+c[2]+"-"+c[3]+"-"+c[4]+"-"+c[5]+c[6]+c[7]
 
-generate_ID()
-
+repl_left_curl = generate_ID()
+repl_right_curl = generate_ID()
+repl_esc_char = generate_ID()
+repl_ent_tagger = generate_ID()
 
 # In[30]:
 
@@ -63,7 +66,8 @@ df
 
 
 # get column number for manipulation next
-col_num_INTENT_NAME = df.columns.get_loc("INTENT_NAME")
+col_num_INTENT_NAME = df.columns.get_loc("INTENT_NAME")  # variable not used?
+col_num_PARAMETERS = df.columns.get_loc("PARAMS")  # variable not used?
 col_num_IN = df.columns.get_loc("INPUT_CONTEXT")
 col_num_OUT = df.columns.get_loc("OUTPUT_CONTEXT")
 col_num_USER = df.columns.get_loc("USER_SAYS")
@@ -122,6 +126,7 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
 
 
     intent_name = intent_df_row['INTENT_NAME']
+    parameters = intent_df_row['PARAMS']
     input_contexts = intent_df_row['INPUT_CONTEXT_L']
     output_contexts = [[y.strip() for y in x.split(',')]
                        for x in intent_df_row['OUTPUT_CONTEXT_L']]
@@ -151,7 +156,7 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
         affectedContext["lifespan"] = output_context[0]
         intent_jsonfile_responses["affectedContexts"].append(affectedContext)
 
-    intent_jsonfile_responses["parameters"] = []
+    intent_jsonfile_responses["parameters"] = json.loads(parameters)
     intent_jsonfile_responses["messages"] = []  # probably allow for list of messages? yes
 
 
@@ -248,11 +253,38 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
         user_say = {}
         user_say["id"] = generate_ID()
         user_say["data"] = []  # no entities for now and the near future
-        snippet = {}
-        snippet["text"] = training_phrase
-        snippet["userDefined"] = False
-        user_say["data"] = [snippet]
-
+        
+        snippets = []
+        training_phrase = training_phrase.replace("\\{", repl_left_curl)
+        training_phrase = training_phrase.replace("\\}", repl_right_curl)
+        training_phrase = training_phrase.replace("{", "{" + repl_ent_tagger)
+        training_phrase = training_phrase.replace("}", "{")
+        text_snippets = training_phrase.split("{")
+        for text_snippet in text_snippets:
+            try:
+                # may not support all edge cases
+                snippet = {}
+                snippet["userDefined"] = False
+                text_snippet = text_snippet.replace(repl_left_curl, "{")
+                text_snippet = text_snippet.replace(repl_right_curl, "}")
+                text_snippet_ = text_snippet
+                if text_snippet.startswith(repl_ent_tagger):
+                    text_snippet = text_snippet[len(repl_ent_tagger):]
+                    entity_name, alias, text_snippet = text_snippet.split(",",2)
+                    snippet["meta"] = entity_name  # not sure of the use of "alias" or need or not
+                    if alias != "":
+                        snippet["alias"] = alias
+                    snippet["userDefined"] = True
+                snippet["text"] = text_snippet
+                snippets.append(snippet)
+            except:
+                print("error parsing snippet : ", ascii(text_snippet))
+                snippet = {}
+                snippet["userDefined"] = False
+                snippet["text"] = text_snippet_
+                snippets.append(snippet)
+                
+        user_say["data"] = snippets
         user_say["isTemplate"] = False
         user_say["count"] = 0
         user_say["updated"] = int(time.time())
@@ -316,47 +348,7 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
 # In[43]:
 
 
-# "project": "newagent-fcefe" may be an issue
-agent_json = '''{
-  "description": "",
-  "language": "en",
-  "disableInteractionLogs": false,
-  "disableStackdriverLogs": true,
-  "googleAssistant": {
-    "googleAssistantCompatible": false,
-    "project": "newagent-fcefe",
-    "welcomeIntentSignInRequired": false,
-    "startIntents": [],
-    "systemIntents": [],
-    "endIntentIds": [],
-    "oAuthLinking": {
-      "required": false,
-      "grantType": "AUTH_CODE_GRANT"
-    },
-    "voiceType": "MALE_1",
-    "capabilities": [],
-    "protocolVersion": "V2",
-    "isDeviceAgent": false
-  },
-  "defaultTimezone": "Asia/Hong_Kong",
-  "webhook": {
-    "available": false,
-    "useForDomains": false,
-    "cloudFunctionsEnabled": false,
-    "cloudFunctionsInitialized": false
-  },
-  "isPrivate": true,
-  "customClassifierMode": "use.after",
-  "mlMinConfidence": 0.3,
-  "supportedLanguages": [],
-  "onePlatformApiVersion": "v2",
-  "analyzeQueryTextSentiment": false,
-  "enabledKnowledgeBaseNames": [],
-  "knowledgeServiceConfidenceAdjustment": -0.4,
-  "dialogBuilderMode": false
-}'''
-
-
+############################################################################################
 # # Converting entities
 
 # In[44]:
@@ -400,7 +392,9 @@ for index, row in df.iterrows():  # CURRENTLY ONLY PROCESSING ONE ROW
         entities.append(entity)
         entity = {}
         entity_name = intent_df_row['ENTITY_NAME']
+        entity_info = intent_df_row['PARAMS']
         entity["ENTITY_NAME"] = entity_name
+        entity["PARAMS"] = intent_df_row['PARAMS']
         entity["ENTRIES"] = [{intent_df_row['ENTITY_VALUE'] : synomyms}]
     else:
         entity["ENTRIES"].append({intent_df_row['ENTITY_VALUE'] : synomyms})
@@ -435,14 +429,14 @@ except:
 
 # define a list/dictionary for {intent_name}.json
 for entity in entities:
-    entity_jsonfile = {}
-    entity_jsonfile["id"] = generate_ID() # to randomly generate
+    entity_jsonfile = ast.literal_eval(entity["PARAMS"])
+#     entity_jsonfile["id"] = generate_ID() # to randomly generate
     entity_jsonfile["name"] = entity["ENTITY_NAME"]
-    entity_jsonfile["automatedExpansion"] = False  # will change to lowercase when converted to jsonfile
-    entity_jsonfile["allowFuzzyExtraction"] = False
-    entity_jsonfile["isEnum"] = False
-    entity_jsonfile["isOverridable"] = True
-    entity_jsonfile["isRegexp"] = False
+#     entity_jsonfile["automatedExpansion"] = False  # will change to lowercase when converted to jsonfile
+#     entity_jsonfile["allowFuzzyExtraction"] = False
+#     entity_jsonfile["isEnum"] = False
+#     entity_jsonfile["isOverridable"] = True
+#     entity_jsonfile["isRegexp"] = False
 
     synonyms_jsonfile = []
     for entry in entity['ENTRIES']:
@@ -459,6 +453,49 @@ for entity in entities:
         json.dump(synonyms_jsonfile, outfile)
 
 
+# In[52]:
+
+############################################################################################
+
+
+# def json_to_csv(json_dict):
+#     csv_list = []
+#     for k,v in json_dict.items():
+#         csv_list.append([k,str(type(v)).split("\'")[1],str(v)])
+#     return csv_list
+
+import ast
+
+def csv_to_json(csv_list):
+    '''csv_list is a list of lists
+    [['key', 'type', 'value represented as string']]'''
+    json_dict = {}
+    for p in csv_list:        
+        if p[1] == 'float':
+            value = float(p[2])
+        elif p[1] == 'int':
+            value = int(p[2])
+        elif p[1] == 'bool':
+            value = (p[2] != "True")
+        elif p[1] == 'dict' or p[1] == 'list':
+            value = ast.literal_eval(p[2])
+        elif p[1] == 'str':
+            value = p[2]
+        else:
+            value = ""
+            print("ERROR, how is this possible?")
+        json_dict[p[0]] = value
+    return json_dict
+
+df_agent = pd.read_csv('temp/{}.csv'.format(FILE_NAME + "-agent"), 
+                       header=0, keep_default_na=False)
+agent_json = csv_to_json(df_agent.values)
+with open('temp/{}/agent.json'.format(FILE_NAME), 'w') as outfile:
+    json.dump(agent_json, outfile)
+
+
+############################################################################################
+        
 # # Zipping folder
 
 # In[51]:
@@ -466,7 +503,4 @@ for entity in entities:
 
 os.system("rm template.zip")
 os.system("cd temp/{}/ && zip -r ../{}.zip * -x *.DS_Store".format(FILE_NAME, FILE_NAME))
-
-
-# In[52]:
 
