@@ -16,7 +16,7 @@
             To convert dialogflow .zip file into spreadsheets on Google Sheets <br><br>
             Please download the chatbot file from your dialogflow console. 
             Instructions: Left panel - Settings (gear icon) &gt Export & Import &gt EXPORT AS ZIP <br><br>
-            Alternatively you could use <a href="df-to-csv/temp/template.zip" download>our template</a>.
+            Alternatively you could use <a href="/template.zip" download>our template</a>.
         </p>
         <input type="file" id="file-to-convert-zip" accept=".zip"><br>
         <button id="clicker-df-to-csv">Submit</button>
@@ -32,10 +32,10 @@
         - Allow whole URL as input
         - Autofill on complete of the above section.
         -->
-            <a href="https://docs.google.com/spreadsheets/d/1kUg5TlILJ9XiWhowmGvOtBwrMlJTuvuXgUfgBTLZuIg">Sample</a>
-            sheets ID (view-only) 1kUg5TlILJ9XiWhowmGvOtBwrMlJTuvuXgUfgBTLZuIg
+            <a href="https://docs.google.com/spreadsheets/d/1p6QxIJj15HNf_vK7Ykk2FgKLg7SHdoPHhWP2E11k92o">Sample</a>
+            sheets ID (view-only) 1p6QxIJj15HNf_vK7Ykk2FgKLg7SHdoPHhWP2E11k92o
         </p>
-        <form enctype="multipart/form-data" action="http://35.240.155.66:4000" method="POST">
+        <form enctype="multipart/form-data" action="https://us-central1-chatbot-sheets.cloudfunctions.net/csv_to_df" method="POST">
             <input type="text" name="sheetsID">
             <button type="submit">Submit</button>
         </form>
@@ -45,8 +45,12 @@
 
         xhr.onreadystatechange = function() { 
         if (xhr.readyState == 4){
-            if (xhr.status == 200){
-                var resultLink = xhr.responseText; 
+            if (xhr.status == 200){              
+                var response_json = JSON.parse(xhr.responseText); 
+                var resultLink = response_json["sheets_link"]; 
+                console.log(xhr);
+                console.log(response_json);
+                console.log(resultLink);
                 document.getElementById("returnText").innerHTML = resultLink;
                 document.getElementById("returnText").href = resultLink;
         }}};
@@ -58,10 +62,11 @@
             var formData = new FormData();
             formData.append("file-to-convert", document.getElementById("file-to-convert-zip").files[0]);
 
-            xhr.open("POST", "http://35.240.155.66:5000/");  
+            xhr.open("POST", "https://us-central1-chatbot-sheets.cloudfunctions.net/df_to_csv");  
             xhr.send(formData);
         })
         </script>
 
     </body>
 </html>
+
