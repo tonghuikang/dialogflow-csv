@@ -16,9 +16,13 @@ Internet egress traffic per month. Note that even for free tier usage, we requir
 billing account.
  
 
-Inside the folder `df-to_csv` and `csv-to-df` respectively, run:
-```gcloud functions deploy df_to_csv --runtime python37 --trigger-http```
-```gcloud functions deploy csv_to_df --runtime python37 --trigger-http```
+Inside the folders `df-to_csv` and `csv-to-df` respectively, run:
+
+```
+gcloud functions deploy df_to_csv --runtime python37 --trigger-http
+gcloud functions deploy csv_to_df_forms --runtime python37 --trigger-http
+gcloud functions deploy csv_to_df_params --runtime python37 --trigger-http
+```
 
 A working version should be available on https://dialogflow-csv-stable.glitch.me/
 

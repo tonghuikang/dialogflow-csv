@@ -516,7 +516,7 @@ def get_file_path(filename):
     return os.path.join(tempfile.gettempdir(), file_name)
 
 
-def csv_to_df(request):
+def csv_to_df_forms(request):
     """
     Args:
         request (flask.Request): The request object.
@@ -532,8 +532,28 @@ def csv_to_df(request):
     for field in data:
         fields[field] = data[field]
         print('Processed field: {} : {}'.format(field, data[field]))
-
     url_or_id = fields['sheetsID']
+
+    return csv_to_df(url_or_id)
+
+
+def csv_to_df_params(request):
+    """
+    Args:
+        request (flask.Request): The request object.
+    Returns:
+        The response text, or any set of values that can be turned into a
+         Response object using `make_response`
+        <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>.
+    """
+
+    url_or_id = request.args.get('sheetsID')
+
+    return csv_to_df(url_or_id)
+
+
+def csv_to_df(url_or_id):
+
     sheetsID = extract_sheetsID(url_or_id)
     print("sheetsID : ", sheetsID)
 
