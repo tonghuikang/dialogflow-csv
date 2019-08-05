@@ -345,7 +345,7 @@ def create_csv(FILE_NAME):
     # please test this code
     # - "_entries" multiple times
     # - "!!!" multiple times
-    files = glob.glob('/tmp/{}/entities/*.json'.format(FILE_NAME, FILE_NAME))
+    files = glob.glob('/tmp/{}/entities/*.json'.format(FILE_NAME))
     files = [file.replace("!!!", rand_string) for file in files]  
     files = [file.replace(".json","!!!!<<.json>>!!!!") for file in files]  
     files = [rreplace(file, "_entries","!!!<<entries>>!!!") for file in files]  
@@ -585,7 +585,7 @@ def df_to_csv(request):
     print(credentials)
     print(sheets_link)
     shutil.make_archive("/tmp/combined", 'zip', "/tmp/")
-    response = jsonify({"sheets_link" : sheets_link})
+    response = jsonify({"sheets_link" : sheets_link, "sheetsID" : SPREADSHEET_ID})
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
 # [END functions_http_form_data]
