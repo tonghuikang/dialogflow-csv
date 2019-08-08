@@ -584,7 +584,7 @@ def df_to_csv(request):
 
     print(credentials)
     print(sheets_link)
-    shutil.make_archive("/tmp/combined", 'zip', "/tmp/")
+    # shutil.make_archive("/tmp/combined", 'zip', "/tmp/")
     response = jsonify({"sheets_link" : sheets_link, "sheetsID" : SPREADSHEET_ID})
     response.headers.add('Access-Control-Allow-Origin', '*')
     return response
